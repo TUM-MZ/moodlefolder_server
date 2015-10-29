@@ -1,3 +1,3 @@
 require('babel/register')({});
 
-require('./src/server/moodle_proxy');
+require('./src/server/db/db_actions');

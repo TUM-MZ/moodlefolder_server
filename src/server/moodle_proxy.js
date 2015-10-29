@@ -26,7 +26,7 @@ export function getCourseInfo(courseid) {
         if (res.ok && !res.body.exception) {
           const courseinfo = res.body[0];
           fulfill({
-            moodle_id: courseinfo.id,
+            moodleid: courseinfo.id,
             url: `${MOODLE_BASE_URL}course/view.php?id=${courseinfo.id}`,
             longtitle: courseinfo.fullname,
             shorttitle: courseinfo.shortname,
@@ -98,6 +98,3 @@ const resource = { type: 'file',
        author: null,
        license: 'allrightsreserved' };
 
-getCourseInfo(2).then((res) => {
-  console.log(res);
-}, (err) => (console.log(err)));
