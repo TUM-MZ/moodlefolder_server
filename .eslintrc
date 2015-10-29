@@ -1,0 +1,33 @@
+{
+  "extends": "airbnb",
+  "ecmaFeatures": {
+  	"blockBindings": true,
+  	"arrowFunctions": true,
+  	"modules": true,
+  	"jsx": true,
+  },
+  "env": {
+  	"browser": true,
+  	"es6": true
+  },
+  "rules": {
+      "strict": 2,
+      "semi": 2,
+      "no-undef": 2,
+      "no-unused-vars": 2
+  },
+  "globals"   : {
+    "require": false,
+    "location": false,
+    "process": false,
+    "module",
+    /* MOCHA */
+    "describe"   : false,
+    "it"         : false,
+    "before"     : false,
+    "beforeEach" : false,
+    "after"      : false,
+    "afterEach"  : false
+  },
+  "plugins": ["react"]
+}

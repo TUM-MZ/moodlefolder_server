@@ -1,0 +1,2 @@
+export const WS_TOKEN = 'c956f61700b7c6e4f624910e827872d8';
+
