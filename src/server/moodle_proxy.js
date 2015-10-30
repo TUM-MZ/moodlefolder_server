@@ -1,7 +1,8 @@
+require('es6-promise').polyfill();
+
 import request from 'superagent';
 import { WS_TOKEN } from './token.js';
 import saPromise from 'superagent-promise';
-import { Promise } from 'es6-promise';
 import path from 'path';
 import fs from 'fs';
 
@@ -38,7 +39,8 @@ export function getCourseInfo(courseid) {
   });
 }
 
-export function getCourseResources(courseid) {
+export function getCourseResources(course) {
+  const courseid = course.moodleid;
   const courseContent = new Promise((fulfill, reject) => {
     request
       .get(MOODLE_REST_API)
@@ -63,7 +65,7 @@ export function getCourseResources(courseid) {
       if (section.modules) {
         section.modules.forEach((module) => {
           if (module.modname === 'resource') {
-            resources.push(module);
+            module.contents.forEach((file) => resources.push(file));
           }
         });
       }
