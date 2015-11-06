@@ -9,7 +9,8 @@ create table course (
   moodleid integer unique not null,
   url text not null,
   longtitle text not null,
-  shorttitle text not null
+  shorttitle text not null,
+  powerfolderid text not null,
 );
 
 create table user_course (

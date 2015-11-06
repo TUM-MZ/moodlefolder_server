@@ -1,8 +1,7 @@
 require('es6-promise').polyfill();
 require('promise.prototype.finally');
 
-import { getCourseInfo } from '../moodle_proxy';
-import { downloadResource } from '../powerfolder_proxy';
+import { uploadResource } from '../powerfolder_proxy';
 import pg from 'pg';
 
 const connString = 'postgres://postgres@localhost/moodlefolder';
@@ -31,12 +30,11 @@ function runQuery(query, ...params) {
   });
 }
 
-export function addCourse(courseid) {
-  return getCourseInfo(courseid)
-    .then((courseinfo) => {
-      return runQuery(`INSERT INTO course (moodleid, url, longtitle, shorttitle)
-             VALUES ($1, $2, $3, $4)`, courseinfo.moodleid, courseinfo.url, courseinfo.longtitle, courseinfo.shorttitle);
-    });
+export function addCourseToDB(courseinfo) {
+  console.log(courseinfo);
+  return runQuery(`INSERT INTO course (moodleid, url, longtitle, shorttitle, powerfolderid)
+         VALUES ($1, $2, $3, $4, $5)`,
+    courseinfo.moodleid, courseinfo.url, courseinfo.longtitle, courseinfo.shorttitle, courseinfo.powerfolderid);
 }
 
 export function listCourses() {
@@ -67,11 +65,11 @@ export function updateResource(course, resource) {
     .then((result) => {
       if (result.rows.length === 0) {
         return addResource(course, resource)
-          .then(() => downloadResource(resource), console.error);
+          .then(() => (resource), console.error);
       } else {
         return updateResourceEntry(resource).then(() => {
           if (result.rows[0].lastmodified < resource.lastmodified) {
-            return downloadResource(resource);
+            return resource;
           }
         }, console.error);
       }

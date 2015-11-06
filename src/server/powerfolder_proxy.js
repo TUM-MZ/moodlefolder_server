@@ -6,49 +6,31 @@ import pure_request from 'request';
 import mime from 'mime';
 const cookie_jar = pure_request.jar();
 const jarred_request = pure_request.defaults({jar: cookie_jar});
+import { filter } from 'lodash';
 require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
+
+let isLoggedIn = false;
 
 function request(options) {
   return new Promise((fulfill, reject) => {
     const extOptions = Object.assign(options, {jar: cookie_jar});
     pure_request(extOptions, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
+      if (!error && response.statusCode === 200) {
         fulfill(body);
       } else {
-        reject(error || 'Error ' + response.statusCode);
+        reject(error || 'Error ' + response.statusCode + ', body: ' + body);
       }
-    }).on('response', (response) => console.log("header cookies", response.headers.cookie));
+    });
   });
 }
 
-/**
- * Download a specified resource into the course folder in PowerFolder
- * @param {Object} resource
- */
-export function downloadResource(resource) {
-  downloadFile(resource, path.join('/tmp/pf/', resource.filename));
-}
-
-function getFolderInfo(folderid) {
-  request
-    .get(PF_URL + 'api/folders')
-    .query({
-      action: 'getInfo',
-      ID: folderid,
-    })
-    .auth(pflogin, pfpassword)
-    .end((err, res) => {
-      console.log(res.body);
-    });
-}
-
-const folderid = 'MlRWY2lXUkFTaGQ4NXNQeVZ2TmFY';
-
-//getFolderInfo(folderid);
-
 function login() {
+  if (isLoggedIn) {
+    console.log('already logged in');
+    return null;
+  }
   return request({
     method: 'get',
     url: PF_URL + 'login',
@@ -72,10 +54,51 @@ function login() {
           CSRFToken: '',
         },
       });
+    })
+    .then(() => {
+      isLoggedIn = true;
+      return true;
     });
 }
 
-function upload_file(file_path, folder_id, filename) {
+export function createFolder(folderName) {
+  return request({
+    method: 'GET',
+    url: PF_URL + 'api/folders',
+    qs: {
+      action: 'create',
+      name: folderName,
+    },
+    auth: {
+      user: pflogin,
+      pass: pfpassword,
+    },
+  }).then((body) => JSON.parse(body));
+}
+
+
+const folderid = 'MlRWY2lXUkFTaGQ4NXNQeVZ2TmFY';
+
+
+export function getFolderIdByName(foldername) {
+  return login()
+    .then(() => {
+      return request({
+        method: 'get',
+        url: PF_URL + 'foldersjson',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
+        },
+      });
+    })
+    .then((body) => {
+      fs.writeFile("/tmp/res.html", body);
+      const folder = filter(JSON.parse(body).ResultSet.Result, (f) => (f.name === foldername))[0];
+      return /https:\/\/syncandshare.lrz.de\/files\/(.*)$/g.exec(folder.resourceURL)[1];
+    });
+}
+
+function uploadFile(file_path, folder_id, filename) {
   return request({
     method: 'post',
     url: PF_URL + 'upload/' + folder_id,
@@ -99,12 +122,16 @@ function upload_file(file_path, folder_id, filename) {
   });
 }
 
-const promise = login();
-promise.then(() => request({url: PF_URL + 'folderstable'})).then((body) => {
-  fs.writeFile('/tmp/res.html', body, () => (console.log('written')));
-  console.log(cookie_jar.getCookies(PF_URL));
-  return upload_file("/home/alendit/Documents/akkubohrer_rechnung.pdf", folderid);
-}, console.error).then(() => (console.log('uploaded')));
+/**
+ * Download a specified resource into the course folder in PowerFolder
+ * @param {Object} resource
+ */
+export function uploadResource(course, resource) {
+  if (!course) return;
+  const tempPath = path.join('/tmp/pf/', resource.filename);
+  downloadFile(resource, tempPath);
+  return uploadFile(tempPath, course.powerfolderid, resource.filename);
+  //fs.unlinkSync(tempPath);
+}
 
-
-// https://syncandshare.lrz.de/filesjson/MlRWY2lXUkFTaGQ4NXNQeVZ2TmFY?CSRFToken=
+//getFolderIdByName('child1_1').then(console.log);
