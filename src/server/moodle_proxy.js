@@ -1,20 +1,19 @@
 require('es6-promise').polyfill();
 
-import request from 'superagent';
+import superagent from 'superagent';
+import request from 'request';
 import { WS_TOKEN } from './token.js';
-import saPromise from 'superagent-promise';
 import path from 'path';
 import fs from 'fs';
 
-const agent = saPromise(request, Promise);
-
 const MOODLE_BASE_URL = 'http://localhost/~alendit/moodle/';
+//const MOODLE_BASE_URL = 'https://support.moodle.tum.de/';
 const MOODLE_REST_API = `${MOODLE_BASE_URL}webservice/rest/server.php`;
 const MOODLE_DOWNLOAD_URL = `${MOODLE_BASE_URL}webservice/pluginfile.php`;
 
 export function getCourseInfo(courseid) {
   return new Promise((fulfill, reject) => {
-    request
+    superagent
       .get(MOODLE_REST_API)
       .query({
         wstoken: WS_TOKEN,
@@ -42,7 +41,7 @@ export function getCourseInfo(courseid) {
 export function getCourseResources(course) {
   const courseid = course.moodleid;
   const courseContent = new Promise((fulfill, reject) => {
-    request
+    superagent
       .get(MOODLE_REST_API)
       .query({
         wstoken: WS_TOKEN,
@@ -75,28 +74,20 @@ export function getCourseResources(course) {
 }
 
 export function downloadFile(resource, targetPath) {
+  const file = fs.createWriteStream(targetPath);
   const fileurl = resource.fileurl;
-  request
-    .get(fileurl)
-    .query({token: WS_TOKEN})
-    .end(function(err, res) {
-      if (res.ok) {
-        fs.writeFileSync(targetPath, res.body);
-      } else {
-        throw Error(err);
-      }
+  return new Promise((fulfill, reject) => {
+    const req = request({
+      method: 'get',
+      url: fileurl,
+      qs: {token: WS_TOKEN},
+      json: true,
+    })
+      .pipe(file);
+    req.on('error', reject);
+    req.on('finish', () => {
+      file.close();
+      fulfill(targetPath);
     });
+  });
 }
-
-const resource = { type: 'file',
-       filename: 'helizone_banner.png',
-       filepath: '/',
-       filesize: 452783,
-       fileurl: 'http://localhost/~alendit/moodle/webservice/pluginfile.php/63/mod_resource/content/0/helizone_banner.png?forcedownload=1',
-       timecreated: 1446118655,
-       timemodified: 1446118655,
-       sortorder: 1,
-       userid: 2,
-       author: null,
-       license: 'allrightsreserved' };
-

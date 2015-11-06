@@ -5,7 +5,7 @@ import pg from 'pg';
 
 import { listCourses, updateResource, addCourseToDB } from './db/db_actions';
 import { getCourseResources, getCourseInfo } from './moodle_proxy';
-import { createFolder, uploadResource, getFolderIdByName } from './powerfolder_proxy';
+import { createFolder, uploadResource, getFolderIdByName, login } from './powerfolder_proxy';
 import { partial } from 'lodash';
 
 function pmap(list, callback) {
@@ -14,8 +14,10 @@ function pmap(list, callback) {
 }
 
 export function updateResources() {
-  return listCourses()
+  return login()
+    .then(listCourses)
     .then((courses) => {
+      console.log('got list of courses');
       return pmap(courses, (course) => {
         return getCourseResources(course).then((resources) => {
           return pmap(resources, (resource) => {
@@ -23,9 +25,9 @@ export function updateResources() {
           })
           .then((resourcesToUpdate) => {
             console.log(resourcesToUpdate);
-            pmap(resourcesToUpdate, partial(uploadResource, course));
+            return pmap(resourcesToUpdate, partial(uploadResource, course));
           })
-          .then((uploaded) => (console.log('uploaded', uploaded)));
+          .then((uploaded) => (console.log('uploaded', uploaded)), console.error);
         });
       });
     }, (error) => (console.error('Error encountered: ', error)))
@@ -48,9 +50,9 @@ export function addCourse(courseid) {
 }
 
 addCourse(3)
-   .then(() => updateResources());
+   .then(() => updateResources(), console.error);
 
-//updateResources()
+//updateResources().then(console.log);
 //  .then(() => console.log('Updated'), console.error);
 
 // getCourseResources({moodleid: 3}).then(console.log, console.error);

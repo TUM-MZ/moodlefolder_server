@@ -31,7 +31,6 @@ function runQuery(query, ...params) {
 }
 
 export function addCourseToDB(courseinfo) {
-  console.log(courseinfo);
   return runQuery(`INSERT INTO course (moodleid, url, longtitle, shorttitle, powerfolderid)
          VALUES ($1, $2, $3, $4, $5)`,
     courseinfo.moodleid, courseinfo.url, courseinfo.longtitle, courseinfo.shorttitle, courseinfo.powerfolderid);

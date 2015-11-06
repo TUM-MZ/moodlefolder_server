@@ -11,8 +11,6 @@ require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
 
-let isLoggedIn = false;
-
 function request(options) {
   return new Promise((fulfill, reject) => {
     const extOptions = Object.assign(options, {jar: cookie_jar});
@@ -26,11 +24,7 @@ function request(options) {
   });
 }
 
-function login() {
-  if (isLoggedIn) {
-    console.log('already logged in');
-    return null;
-  }
+export function login() {
   return request({
     method: 'get',
     url: PF_URL + 'login',
@@ -54,10 +48,6 @@ function login() {
           CSRFToken: '',
         },
       });
-    })
-    .then(() => {
-      isLoggedIn = true;
-      return true;
     });
 }
 
@@ -98,7 +88,7 @@ export function getFolderIdByName(foldername) {
     });
 }
 
-function uploadFile(file_path, folder_id, filename) {
+function uploadFile(targetPath, folder_id, filename) {
   return request({
     method: 'post',
     url: PF_URL + 'upload/' + folder_id,
@@ -112,10 +102,10 @@ function uploadFile(file_path, folder_id, filename) {
       //action: 'rename',
       CSRFToken: '',
       file: {
-        value: fs.createReadStream(file_path),
+        value: fs.createReadStream(targetPath),
         options: {
-          filename: filename || path.basename(file_path),
-          contentType: mime.lookup(file_path),
+          filename: filename || path.basename(targetPath),
+          contentType: mime.lookup(targetPath),
         },
       },
     },
@@ -127,11 +117,13 @@ function uploadFile(file_path, folder_id, filename) {
  * @param {Object} resource
  */
 export function uploadResource(course, resource) {
-  if (!course) return;
+  if (!course || !resource) return undefined;
   const tempPath = path.join('/tmp/pf/', resource.filename);
-  downloadFile(resource, tempPath);
-  return uploadFile(tempPath, course.powerfolderid, resource.filename);
-  //fs.unlinkSync(tempPath);
+  return downloadFile(resource, tempPath)
+    .then(() => {
+      return uploadFile(tempPath, course.powerfolderid, resource.filename);
+    }, console.error)
+    .then(() => (fs.unlinkSync(tempPath)));
 }
 
 //getFolderIdByName('child1_1').then(console.log);
