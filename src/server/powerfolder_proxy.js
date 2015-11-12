@@ -51,9 +51,28 @@ export function createFolder(folderName) {
   }).then((body) => JSON.parse(body));
 }
 
-
-const folderid = 'MlRWY2lXUkFTaGQ4NXNQeVZ2TmFY';
-
+/*
+ * takes the internal folder ID not the external one
+ */
+export function removeFolder(folderid) {
+  return login()
+    .then(() =>
+      request({
+        url: PF_URL + 'leavefolder',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
+        },
+        qs: {
+          leave: 'true',
+          removePermission: 'true',
+          FolderID: folderid,
+          FolderName: 'doesntmatter',
+          action: 'leave',
+          CSRFToken: '$CSRFToken',
+        },
+      })
+    );
+}
 
 export function getFolderIdByName(foldername) {
   return login()
@@ -67,48 +86,35 @@ export function getFolderIdByName(foldername) {
       });
     })
     .then((body) => {
-      fs.writeFile("/tmp/res.html", body);
+      fs.writeFile('/tmp/res.html', body);
       const folder = filter(JSON.parse(body).ResultSet.Result, (f) => (f.name === foldername))[0];
       return /https:\/\/syncandshare.lrz.de\/files\/(.*)$/g.exec(folder.resourceURL)[1];
     });
 }
 
-function uploadFile(targetPath, folder_id, filename) {
-  return request({
-    method: 'post',
-    url: PF_URL + 'upload/' + folder_id,
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'
-    },
-    formData: {
-      folderID: folder_id,
-      path: '',
-      ajax: 1,
-      //action: 'rename',
-      CSRFToken: '',
-      file: {
-        value: fs.createReadStream(targetPath),
-        options: {
-          filename: filename || path.basename(targetPath),
-          contentType: mime.lookup(targetPath),
+export function uploadFile(targetPath, externalFolderID, internalFolderID, filename) {
+  return login()
+    .then(() => request({
+      method: 'post',
+      url: PF_URL + 'upload/' + externalFolderID,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      formData: {
+        folderID: internalFolderID,
+        path: '',
+        ajax: 1,
+        // action: 'rename',
+        CSRFToken: '',
+        file: {
+          value: fs.createReadStream(targetPath),
+          options: {
+            filename: filename || path.basename(targetPath),
+            contentType: mime.lookup(targetPath),
+          },
         },
       },
-    },
-  });
+    }));
 }
 
-/**
- * Download a specified resource into the course folder in PowerFolder
- * @param {Object} resource
- */
-export function uploadResource(course, resource) {
-  if (!course || !resource) return undefined;
-  const tempPath = path.join('/tmp/pf/', resource.filename);
-  return downloadFile(resource, tempPath)
-    .then(() => {
-      return uploadFile(tempPath, course.powerfolderid, resource.filename);
-    }, console.error)
-    .then(() => (fs.unlinkSync(tempPath)));
-}
-
-//getFolderIdByName('child1_1').then(console.log);

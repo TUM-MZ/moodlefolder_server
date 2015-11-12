@@ -10,7 +10,8 @@ create table course (
   url text not null,
   longtitle text not null,
   shorttitle text not null,
-  powerfolderid text not null,
+  powerfolderinternalid text not null,
+  powerfolderexternalid text not null
 );
 
 create table user_course (

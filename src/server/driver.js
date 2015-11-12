@@ -4,13 +4,30 @@ require('promise.prototype.finally');
 import pg from 'pg';
 
 import { listCourses, updateResource, addCourseToDB } from './db/db_actions';
-import { getCourseResources, getCourseInfo } from './moodle_proxy';
-import { createFolder, uploadResource, getFolderIdByName, login } from './powerfolder_proxy';
+import { getCourseResources, getCourseInfo, downloadFile } from './moodle_proxy';
+import { createFolder, getFolderIdByName, login, uploadFile } from './powerfolder_proxy';
 import { partial } from 'lodash';
+import path from 'path';
+import fs from 'fs';
 
 function pmap(list, callback) {
   const promises = list.map(callback);
   return Promise.all(promises);
+}
+
+
+/**
+ * Download a specified resource into the course folder in PowerFolder
+ * @param {Object} resource
+ */
+export function uploadResource(course, resource) {
+  if (!course || !resource) return undefined;
+  const tempPath = path.join('/tmp/', resource.filename);
+  return downloadFile(resource, tempPath)
+    .then(() =>
+      uploadFile(tempPath, course.powerfolderexternalid, course.powerfolderinternalid, resource.filename)
+    , console.error);
+    // .then(() => (fs.unlinkSync(tempPath)));
 }
 
 export function updateResources() {
@@ -37,10 +54,17 @@ export function updateResources() {
 }
 
 export function addCourse(courseid) {
+  let powerfolderinternalid;
   return getCourseInfo(courseid)
     .then(courseinfo => createFolder(courseinfo.shorttitle))
-    .then(() => getFolderIdByName(courseinfo.shorttitle))
-    .then(powerfolderid => ({powerfolderid, ...courseinfo}),
+    .then((folderinfo) => {
+      powerfolderinternalid = folderinfo.ID;
+      return getFolderIdByName(courseinfo.shorttitle);
+    })
+    .then(powerfolderid => ({
+      powerfolderexternalid: powerfolderid,
+      powerfolderinternalid,
+      ...courseinfo}),
           () => (console.log(`Folder for course ${courseinfo.shorttitle} already exists`)))
     .then(addCourseToDB);
 }
@@ -66,13 +90,3 @@ export function addUser(lrzid, courseid) {
         })
     })
 }
-
-addCourse(3)
-   .then(() => updateResources(), console.error);
-
-//updateResources().then(console.log);
-//  .then(() => console.log('Updated'), console.error);
-
-// getCourseResources({moodleid: 3}).then(console.log, console.error);
-
-// listCourses().then(console.log, console.error).finally(pg.end());

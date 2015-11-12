@@ -2,6 +2,7 @@ require('es6-promise').polyfill();
 
 import superagent from 'superagent';
 import { request } from './utils';
+import pure_request from 'request';
 import { WS_TOKEN, WS_USER_TOKEN } from './token.js';
 import path from 'path';
 import fs from 'fs';
@@ -67,7 +68,7 @@ export function downloadFile(resource, targetPath) {
   const file = fs.createWriteStream(targetPath);
   const fileurl = resource.fileurl;
   return new Promise((fulfill, reject) => {
-    const req = request({
+    const req = pure_request({
       method: 'get',
       url: fileurl,
       qs: {token: WS_TOKEN},
@@ -98,9 +99,7 @@ export function getUserInfo(lrzid) {
     json: true,
   })
     .then((body) => {
-      const userInfo = JSON.parse(body);
+      const userInfo = body.users[0];
       return { lrzid: userInfo.username, email: userInfo.email };
     }, console.error);
 }
-
-getUserInfo('admin').then(console.log);
