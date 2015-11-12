@@ -3,9 +3,9 @@ require('promise.prototype.finally');
 
 import pg from 'pg';
 
-import { listCourses, updateResource, addCourseToDB } from './db/db_actions';
+import { listCourses, updateResource, addCourseToDB, readCourse, deleteCourse } from './db/db_actions';
 import { getCourseResources, getCourseInfo, downloadFile } from './moodle_proxy';
-import { createFolder, getFolderIdByName, login, uploadFile } from './powerfolder_proxy';
+import { createFolder, getFolderIdByName, login, uploadFile, removeFolder } from './powerfolder_proxy';
 import { partial } from 'lodash';
 import path from 'path';
 import fs from 'fs';
@@ -34,14 +34,12 @@ export function updateResources() {
   return login()
     .then(listCourses)
     .then((courses) => {
-      console.log('got list of courses');
       return pmap(courses, (course) => {
         return getCourseResources(course).then((resources) => {
           return pmap(resources, (resource) => {
             return updateResource(course, resource);
           })
           .then((resourcesToUpdate) => {
-            console.log(resourcesToUpdate);
             return pmap(resourcesToUpdate, partial(uploadResource, course));
           })
           .then((uploaded) => (console.log('uploaded', uploaded)), console.error);
@@ -55,18 +53,30 @@ export function updateResources() {
 
 export function addCourse(courseid) {
   let powerfolderinternalid;
+  let courseinfo;
   return getCourseInfo(courseid)
-    .then(courseinfo => createFolder(courseinfo.shorttitle))
+    .then(responseCourseinfo => {
+      courseinfo = responseCourseinfo;
+      return createFolder(courseinfo.shorttitle);
+    }, () => console.log(`Can\'t retrieve infomation for courseid ${courseid}.`))
     .then((folderinfo) => {
       powerfolderinternalid = folderinfo.ID;
-      return getFolderIdByName(courseinfo.shorttitle);
-    })
+      return getFolderIdByName(folderinfo.folderName);
+    }, () => console.log(`Can't get internal id for course ${courseid}`))
     .then(powerfolderid => ({
       powerfolderexternalid: powerfolderid,
       powerfolderinternalid,
       ...courseinfo}),
           () => (console.log(`Folder for course ${courseinfo.shorttitle} already exists`)))
     .then(addCourseToDB);
+}
+
+export function clearCourse(courseid) {
+  return readCourse(courseid)
+    .then((courseinfo) => {
+      return removeFolder(courseinfo.powerfolderinternalid);
+    })
+    .then(() => deleteCourse(courseid));
 }
 
 export function addUser(lrzid, courseid) {

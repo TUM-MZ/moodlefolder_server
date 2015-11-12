@@ -48,13 +48,13 @@ export function createFolder(folderName) {
       user: pflogin,
       pass: pfpassword,
     },
-  }).then((body) => JSON.parse(body));
+  }).then((body) => ({folderName, ...JSON.parse(body)}));
 }
 
 /*
  * takes the internal folder ID not the external one
  */
-export function removeFolder(folderid) {
+export function removeFolder(internalfolderid) {
   return login()
     .then(() =>
       request({
@@ -65,7 +65,7 @@ export function removeFolder(folderid) {
         qs: {
           leave: 'true',
           removePermission: 'true',
-          FolderID: folderid,
+          FolderID: internalfolderid,
           FolderName: 'doesntmatter',
           action: 'leave',
           CSRFToken: '$CSRFToken',

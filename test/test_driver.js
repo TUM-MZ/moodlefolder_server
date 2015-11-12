@@ -1,5 +1,7 @@
-import { uploadResource } from '../src/server/driver';
+import { uploadResource, addCourse, clearCourse } from '../src/server/driver';
 import { assertPromise } from './test_utils';
+import { readCourse } from '../src/server/db/db_actions';
+import { expect } from 'chai';
 
 describe('main driver', () => {
   it('should upload specified resource', (done) => {
@@ -17,10 +19,26 @@ describe('main driver', () => {
     const course = {
       powerfolderexternalid: 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q',
       powerfolderinternalid: '2L9MgHvBPPZLYiQcYZ5Nj',
-    }
+    };
 
     const uploadpromise = uploadResource(course, resource);
 
     assertPromise(done, uploadpromise, () => undefined);
   });
-})
+
+  it('should add a new course by moodle id and remove it', function(done) {
+    const moodleid = 3;
+    let courseinfo;
+    this.timeout(4000);
+    const addpromise = addCourse(moodleid)
+      .then(() => readCourse(moodleid))
+      .then((responseCourseinfo) => {
+        courseinfo = responseCourseinfo;
+        return clearCourse(moodleid);
+      })
+      .then(() => courseinfo);
+    assertPromise(done, addpromise, (course) => {
+      expect(course.moodleid).to.equal(moodleid);
+    });
+  });
+});

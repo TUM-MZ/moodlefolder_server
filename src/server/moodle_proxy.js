@@ -19,14 +19,13 @@ export function getCourseInfo(courseid) {
       wsfunction: 'core_course_get_courses',
       moodlewsrestformat: 'json',
       options: {
-        ids: courseid,
+        ids: [courseid],
       },
     },
     json: true,
   })
     .then((body) => {
       const courseinfo = body[0];
-
       return {
         moodleid: courseinfo.id,
         url: `${MOODLE_BASE_URL}course/view.php?id=${courseinfo.id}`,

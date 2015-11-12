@@ -13,7 +13,7 @@ describe('getting resource list from the moodle API', () => {
   });
 
   it('should get course information of a specified course', (done) => {
-    const courseinfo = getCourseInfo({moodleid: 2});
+    const courseinfo = getCourseInfo(2);
     assertPromise(done, courseinfo, (info) => {
       expect(info.shorttitle).to.equal('f1');
       expect(info.moodleid).to.equal(2);

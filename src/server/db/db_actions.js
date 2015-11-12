@@ -32,9 +32,9 @@ function runQuery(query, ...params) {
 
 export function addCourseToDB(courseinfo) {
   return runQuery(`INSERT INTO course (moodleid, url, longtitle, shorttitle, powerfolderinternalid, powerfolderexternalid)
-         VALUES ($1, $2, $3, $4, $5)`,
+         VALUES ($1, $2, $3, $4, $5, $6)`,
     courseinfo.moodleid, courseinfo.url, courseinfo.longtitle,
-    courseinfo.shorttitle, courseinfo.powerfolderinternalid, powerfolderexternalid)
+    courseinfo.shorttitle, courseinfo.powerfolderinternalid, courseinfo.powerfolderexternalid)
     .then(() => courseinfo);
 }
 
@@ -45,7 +45,12 @@ export function listCourses() {
 
 export function readCourse(courseid) {
   return runQuery('SELECT * FROM course WHERE moodleid=$1', courseid)
-    .then(result => result.rows);
+    .then(result => result.rows[0]);
+}
+
+export function deleteCourse(courseid) {
+  return runQuery('DELETE FROM course WHERE moodleid=$1', courseid)
+    .then(() => courseid);
 }
 
 export function readUser(lrzid) {
