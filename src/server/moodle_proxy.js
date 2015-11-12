@@ -1,66 +1,56 @@
 require('es6-promise').polyfill();
 
 import superagent from 'superagent';
-import request from 'request';
-import { WS_TOKEN } from './token.js';
+import { request } from './utils';
+import { WS_TOKEN, WS_USER_TOKEN } from './token.js';
 import path from 'path';
 import fs from 'fs';
 
 const MOODLE_BASE_URL = 'http://localhost/~alendit/moodle/';
-//const MOODLE_BASE_URL = 'https://support.moodle.tum.de/';
+// const MOODLE_BASE_URL = 'https://support.moodle.tum.de/';
 const MOODLE_REST_API = `${MOODLE_BASE_URL}webservice/rest/server.php`;
-const MOODLE_DOWNLOAD_URL = `${MOODLE_BASE_URL}webservice/pluginfile.php`;
 
 export function getCourseInfo(courseid) {
-  return new Promise((fulfill, reject) => {
-    superagent
-      .get(MOODLE_REST_API)
-      .query({
-        wstoken: WS_TOKEN,
-        wsfunction: 'core_course_get_courses',
-        moodlewsrestformat: 'json',
-      })
-      .query(`options[ids][]=${courseid}`)
-      .set('Accept', 'application/json')
-      .end((err, res) => {
-        if (res.ok && !res.body.exception) {
-          const courseinfo = res.body[0];
-          fulfill({
-            moodleid: courseinfo.id,
-            url: `${MOODLE_BASE_URL}course/view.php?id=${courseinfo.id}`,
-            longtitle: courseinfo.fullname,
-            shorttitle: courseinfo.shortname,
-          });
-        } else {
-          reject(res.text);
-        }
-      });
-  });
+  return request({
+    url: MOODLE_REST_API,
+    qs: {
+      wstoken: WS_TOKEN,
+      wsfunction: 'core_course_get_courses',
+      moodlewsrestformat: 'json',
+      options: {
+        ids: courseid,
+      },
+    },
+    json: true,
+  })
+    .then((body) => {
+      const courseinfo = body[0];
+
+      return {
+        moodleid: courseinfo.id,
+        url: `${MOODLE_BASE_URL}course/view.php?id=${courseinfo.id}`,
+        longtitle: courseinfo.fullname,
+        shorttitle: courseinfo.shortname,
+      };
+    });
 }
 
 export function getCourseResources(course) {
   const courseid = course.moodleid;
-  const courseContent = new Promise((fulfill, reject) => {
-    superagent
-      .get(MOODLE_REST_API)
-      .query({
-        wstoken: WS_TOKEN,
-        wsfunction: 'core_course_get_contents',
-        moodlewsrestformat: 'json',
-        courseid: courseid,
-      })
-      .set('Accept', 'application/json')
-      .end((err, res) => {
-        if (res.ok) {
-          fulfill(res.body);
-        } else {
-          reject(err);
-        }
-      });
+  if (!courseid) throw new Error('Course has to have moodleid');
+  const courseContent = request({
+    url: MOODLE_REST_API,
+    qs: {
+      wstoken: WS_TOKEN,
+      wsfunction: 'core_course_get_contents',
+      moodlewsrestformat: 'json',
+      courseid: courseid,
+    },
   });
   return courseContent.then((res) => {
     const resources = [];
-    res.forEach((section) => {
+    const response = JSON.parse(res);
+    response.forEach((section) => {
       if (section.modules) {
         section.modules.forEach((module) => {
           if (module.modname === 'resource') {
@@ -91,3 +81,26 @@ export function downloadFile(resource, targetPath) {
     });
   });
 }
+
+export function getUserInfo(lrzid) {
+  return request({
+    method: 'get',
+    url: MOODLE_REST_API,
+    qs: {
+      wstoken: WS_USER_TOKEN,
+      wsfunction: 'core_user_get_users',
+      moodlewsrestformat: 'json',
+      criteria: [{
+        key: 'username',
+        value: lrzid,
+      }],
+    },
+    json: true,
+  })
+    .then((body) => {
+      const userInfo = JSON.parse(body);
+      return { lrzid: userInfo.username, email: userInfo.email };
+    }, console.error);
+}
+
+getUserInfo('admin').then(console.log);

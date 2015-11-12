@@ -38,15 +38,33 @@ export function updateResources() {
 
 export function addCourse(courseid) {
   return getCourseInfo(courseid)
-    .then((courseinfo) => {
-      return createFolder(courseinfo.shorttitle)
-        .then(() => {
-          return getFolderIdByName(courseinfo.shorttitle);
-        })
-        .then((powerfolderid) => ({powerfolderid, ...courseinfo}),
-          () => (console.log(`Folder for course ${courseinfo.shorttitle} already exists`)));
-    })
+    .then(courseinfo => createFolder(courseinfo.shorttitle))
+    .then(() => getFolderIdByName(courseinfo.shorttitle))
+    .then(powerfolderid => ({powerfolderid, ...courseinfo}),
+          () => (console.log(`Folder for course ${courseinfo.shorttitle} already exists`)))
     .then(addCourseToDB);
+}
+
+export function addUser(lrzid, courseid) {
+  readCourse(courseid)
+    .then((course) => {
+      let coursePromise;
+      if (course.length === 0) {
+        return addCourse(courseid);
+      } else {
+        return course[0];
+      }
+    })
+    .then((course) => {
+      const user = readUser(lrzid)
+        .then((userinfo) => {
+          if (userinfo.length === 0) {
+            return getUserInfo(lrzid);
+          } else {
+            return userinfo[0];
+          }
+        })
+    })
 }
 
 addCourse(3)

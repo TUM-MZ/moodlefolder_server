@@ -33,12 +33,23 @@ function runQuery(query, ...params) {
 export function addCourseToDB(courseinfo) {
   return runQuery(`INSERT INTO course (moodleid, url, longtitle, shorttitle, powerfolderid)
          VALUES ($1, $2, $3, $4, $5)`,
-    courseinfo.moodleid, courseinfo.url, courseinfo.longtitle, courseinfo.shorttitle, courseinfo.powerfolderid);
+    courseinfo.moodleid, courseinfo.url, courseinfo.longtitle, courseinfo.shorttitle, courseinfo.powerfolderid)
+    .then(() => courseinfo);
 }
 
 export function listCourses() {
   return runQuery(`SELECT * FROM course`)
     .then((result) => (result.rows));
+}
+
+export function readCourse(courseid) {
+  return runQuery('SELECT * FROM course WHERE moodleid=$1', courseid)
+    .then(result => result.rows);
+}
+
+export function readUser(lrzid) {
+  return runQuery('SELECT * from user WHERE lrzid=$1', lrzid)
+    .then(result => result.rows);
 }
 
 export function addResource(course, resource) {

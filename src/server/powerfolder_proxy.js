@@ -2,27 +2,12 @@ import { downloadFile } from './moodle_proxy';
 import path from 'path';
 import {pflogin, pfpassword} from '../../pfauth';
 import fs from 'fs';
-import pure_request from 'request';
 import mime from 'mime';
-const cookie_jar = pure_request.jar();
-const jarred_request = pure_request.defaults({jar: cookie_jar});
 import { filter } from 'lodash';
+import { request } from './utils';
 require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
-
-function request(options) {
-  return new Promise((fulfill, reject) => {
-    const extOptions = Object.assign(options, {jar: cookie_jar});
-    pure_request(extOptions, (error, response, body) => {
-      if (!error && response.statusCode === 200) {
-        fulfill(body);
-      } else {
-        reject(error || 'Error ' + response.statusCode + ', body: ' + body);
-      }
-    });
-  });
-}
 
 export function login() {
   return request({
