@@ -1,4 +1,4 @@
-import { uploadResource, addCourse, clearCourse } from '../src/server/driver';
+import { uploadResource, addCourse, clearCourse, updateResources } from '../src/server/driver';
 import { assertPromise } from './test_utils';
 import { readCourse } from '../src/server/db/db_actions';
 import { expect } from 'chai';
@@ -41,4 +41,13 @@ describe('main driver', () => {
       expect(course.moodleid).to.equal(moodleid);
     });
   });
+
+  it('should update the list of added courses with their content', function(done) {
+    // const promise = addCourse(3)
+    //  .then(() => updateResources);
+    this.timeout(4000);
+    const promise = updateResources();
+
+    assertPromise(done, promise, () => undefined);
+  })
 });

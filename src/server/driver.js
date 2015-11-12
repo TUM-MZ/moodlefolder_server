@@ -35,6 +35,7 @@ export function updateResources() {
     .then(listCourses)
     .then((courses) => {
       return pmap(courses, (course) => {
+        console.log(courses);
         return getCourseResources(course).then((resources) => {
           return pmap(resources, (resource) => {
             return updateResource(course, resource);
