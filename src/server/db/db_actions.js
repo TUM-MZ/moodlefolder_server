@@ -3,10 +3,11 @@ require('promise.prototype.finally');
 
 import { uploadResource } from '../powerfolder_proxy';
 import pg from 'pg';
+import { keys, values, zip } from 'lodash';
 
 const connString = 'postgres://postgres@localhost/moodlefolder';
 
-function runQuery(query, ...params) {
+export function runQuery(query, ...params) {
   return new Promise((fulfill, reject) => {
     pg.connect(connString, (connErr, client, done) => {
       if (connErr) {
@@ -28,6 +29,31 @@ function runQuery(query, ...params) {
     pg.end();
     return error;
   });
+}
+
+function extractObjectInfoForDB(object) {
+  return {
+    columns: keys(object),
+    columnIndexes: keys(object).map((value, index) => '$' + (index + 1)),
+    columnValues: values(object),
+  };
+}
+
+export function create(tablename, object) {
+  const objectInfo = extractObjectInfoForDB(object);
+
+  return runQuery(`INSERT INTO ${tablename} (${objectInfo.columns.join(', ')})
+    VALUES (${objectInfo.columnIndexes.join(', ')})`, ...objectInfo.columnValues)
+    .then((result) => result.rows);
+}
+
+export function read(tablename, selectorObject) {
+  const objectInfo = extractObjectInfoForDB(selectorObject);
+  const selectorPairs = zip(objectInfo.columns, objectInfo.columnIndexes)
+    .map(([column, index]) => `${column}=${index}`);
+  const querystring = `SELECT * FROM ${tablename} WHERE ${selectorPairs.join(' AND ')}`;
+  return runQuery(querystring, ...objectInfo.columnValues)
+    .then((result) => result.rows);
 }
 
 export function addCourseToDB(courseinfo) {
@@ -54,8 +80,16 @@ export function deleteCourse(courseid) {
 }
 
 export function readUser(lrzid) {
-  return runQuery('SELECT * from user WHERE lrzid=$1', lrzid)
-    .then(result => result.rows);
+  return runQuery('SELECT * from moodleuser WHERE lrzid=$1', lrzid)
+    .then(result => result.rows[0]);
+}
+
+export function connectUserToCourse(user, course) {
+  return create('user_course', {
+    userid: user.id,
+    courseid: course.id,
+  })
+    .then(() => console.log('connection created'));
 }
 
 export function addResource(course, resource) {

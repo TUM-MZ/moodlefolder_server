@@ -1,6 +1,7 @@
-import { uploadResource, addCourse, clearCourse, updateResources } from '../src/server/driver';
+import { uploadResource, addCourse, clearCourse, updateResources, addUserToCourse, createUser } from '../src/server/driver';
 import { assertPromise } from './test_utils';
-import { readCourse } from '../src/server/db/db_actions';
+import { readCourse, read, runQuery } from '../src/server/db/db_actions';
+import { identity } from 'lodash';
 import { expect } from 'chai';
 
 describe('main driver', () => {
@@ -26,7 +27,7 @@ describe('main driver', () => {
     assertPromise(done, uploadpromise, () => undefined);
   });
 
-  it('should add a new course by moodle id and remove it', function(done) {
+  it('should create a new course by moodle id and remove it', function(done) {
     const moodleid = 3;
     let courseinfo;
     this.timeout(4000);
@@ -49,5 +50,23 @@ describe('main driver', () => {
     const promise = updateResources();
 
     assertPromise(done, promise, () => undefined);
-  })
+  });
+
+  it('should add a user to a course', function(done) {
+    this.timeout(4000);
+    const promise = addUserToCourse('admin', 3);
+    assertPromise(done, promise, identity);
+  });
+
+  it('it should create a user', (done) => {
+    const promise = createUser('admin')
+      .then(() => read('moodleuser', {lrzid: 'admin'}))
+      .then((result) => {
+        expect(result[0].lrzid).to.equal('admin');
+        expect(result[0].email).to.equal('alendit@gmail.com');
+      })
+      .catch(() => runQuery('DELETE FROM moodleuser WHERE lrzid=$1', 'admin'))
+      .then(() => undefined);
+    assertPromise(done, promise, identity);
+  });
 });

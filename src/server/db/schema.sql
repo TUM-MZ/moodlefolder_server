@@ -1,7 +1,7 @@
 create table moodleuser (
   id bigserial primary key,
-  lrzid text not null,
-  email text not null
+  lrzid text unique not null,
+  email text unique not null
 );
 
 create table course (
@@ -17,7 +17,7 @@ create table course (
 create table user_course (
   userid bigserial references moodleuser(id),
   courseid bigserial references course(id),
-  created timestamp not null
+  created timestamp not null default CURRENT_TIMESTAMP
 );
 
 create table resource (

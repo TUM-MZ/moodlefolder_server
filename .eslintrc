@@ -14,7 +14,8 @@
       "strict": 2,
       "semi": 2,
       "no-undef": 2,
-      "no-unused-vars": 2
+      "no-unused-vars": 2,
+      "no-else-return": 0,
   },
   "globals"   : {
     "require": false,

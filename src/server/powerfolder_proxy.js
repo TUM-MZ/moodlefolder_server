@@ -92,6 +92,36 @@ export function getFolderIdByName(foldername) {
     });
 }
 
+export function shareFolder(course, user) {
+  const externalid = course.powerfolderexternalid;
+  const lrzid = user.lrzid;
+  return login()
+    .then(() =>
+      request({
+        method: 'post',
+        url: PF_URL + 'members/' + externalid,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
+        },
+        qs: {
+          CSRFToken: '',
+          OID: '',
+          permission: 'READ',
+          invite: 'true',
+          username: lrzid,
+          isGroup: '',
+        },
+        json: true,
+      })
+    )
+    .then((response) => {
+      console.log(response);
+      if (!response.message) {
+        throw Error(reponse);
+      }
+    });
+}
+
 export function uploadFile(targetPath, externalFolderID, internalFolderID, filename) {
   return login()
     .then(() => request({

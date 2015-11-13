@@ -3,9 +3,11 @@ require('promise.prototype.finally');
 
 import pg from 'pg';
 
-import { listCourses, updateResource, addCourseToDB, readCourse, deleteCourse } from './db/db_actions';
-import { getCourseResources, getCourseInfo, downloadFile } from './moodle_proxy';
-import { createFolder, getFolderIdByName, login, uploadFile, removeFolder } from './powerfolder_proxy';
+import { listCourses, updateResource, addCourseToDB, readCourse,
+  deleteCourse, readUser, connectUserToCourse, create, read } from './db/db_actions';
+import { getCourseResources, getCourseInfo, downloadFile, getUserInfo } from './moodle_proxy';
+import { createFolder, getFolderIdByName, login, uploadFile,
+  removeFolder, shareFolder } from './powerfolder_proxy';
 import { partial } from 'lodash';
 import path from 'path';
 import fs from 'fs';
@@ -26,8 +28,8 @@ export function uploadResource(course, resource) {
   return downloadFile(resource, tempPath)
     .then(() =>
       uploadFile(tempPath, course.powerfolderexternalid, course.powerfolderinternalid, resource.filename)
-    , console.error);
-    // .then(() => (fs.unlinkSync(tempPath)));
+    , console.error)
+    .then(() => (fs.unlinkSync(tempPath)));
 }
 
 export function updateResources() {
@@ -63,7 +65,7 @@ export function addCourse(courseid) {
     .then((folderinfo) => {
       powerfolderinternalid = folderinfo.ID;
       return getFolderIdByName(folderinfo.folderName);
-    }, () => console.log(`Can't get internal id for course ${courseid}`))
+    }, (err) => console.log(`Can't get internal id for course ${courseid} (${err})`))
     .then(powerfolderid => ({
       powerfolderexternalid: powerfolderid,
       powerfolderinternalid,
@@ -80,24 +82,30 @@ export function clearCourse(courseid) {
     .then(() => deleteCourse(courseid));
 }
 
-export function addUser(lrzid, courseid) {
-  readCourse(courseid)
-    .then((course) => {
-      let coursePromise;
-      if (course.length === 0) {
-        return addCourse(courseid);
-      } else {
-        return course[0];
-      }
+export function createUser(lrzid) {
+  return getUserInfo(lrzid)
+    .then((userinfo) =>
+      create('moodleuser', userinfo)
+    );
+}
+
+export function addUserToCourse(lrzid, courseid) {
+  return Promise.all([readCourse(courseid), readUser(lrzid)])
+    .then(([course, userinfo]) => {
+      let coursepromise;
+      let userpromise;
+      coursepromise = course || addCourse(courseid).then(readCourse(courseid));
+      userpromise = userinfo || createUser(lrzid).then(read('moodleuser', { lrzid }));
+      return Promise.all([coursepromise, userpromise]);
     })
-    .then((course) => {
-      const user = readUser(lrzid)
-        .then((userinfo) => {
-          if (userinfo.length === 0) {
-            return getUserInfo(lrzid);
-          } else {
-            return userinfo[0];
+    .then(([courseinfo, userinfo]) =>
+      read('user_course', {userid: userinfo.id, courseid: courseinfo.id})
+        .then((result) => {
+          if (result.length === 0) {
+            const promise = connectUserToCourse(userinfo, courseinfo)
+              .then(() => shareFolder(courseinfo, userinfo));
           }
+          console.log('no action needed', result);
         })
-    })
+    );
 }
