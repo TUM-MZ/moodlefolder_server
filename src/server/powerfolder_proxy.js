@@ -74,7 +74,7 @@ export function removeFolder(internalfolderid) {
     );
 }
 
-export function getFolderIdByName(foldername) {
+export function getFolderIdsByName(foldername) {
   return login()
     .then(() => {
       return request({
@@ -86,9 +86,12 @@ export function getFolderIdByName(foldername) {
       });
     })
     .then((body) => {
-      fs.writeFile('/tmp/res.html', body);
       const folder = filter(JSON.parse(body).ResultSet.Result, (f) => (f.name === foldername))[0];
-      return /https:\/\/syncandshare.lrz.de\/files\/(.*)$/g.exec(folder.resourceURL)[1];
+      if (!folder) return undefined;
+      return {
+        powerfolderexternalid: /https:\/\/syncandshare.lrz.de\/files\/(.*)$/g.exec(folder.resourceURL)[1],
+        powerfolderinternalid: folder.ID,
+      };
     });
 }
 
@@ -115,7 +118,6 @@ export function shareFolder(course, user) {
       })
     )
     .then((response) => {
-      console.log(response);
       if (!response.message) {
         throw Error(reponse);
       }

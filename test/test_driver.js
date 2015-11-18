@@ -35,7 +35,7 @@ describe('main driver', () => {
       .then(() => readCourse(moodleid))
       .then((responseCourseinfo) => {
         courseinfo = responseCourseinfo;
-        return clearCourse(moodleid);
+        //return clearCourse(moodleid);
       })
       .then(() => courseinfo);
     assertPromise(done, addpromise, (course) => {
@@ -54,18 +54,18 @@ describe('main driver', () => {
 
   it('should add a user to a course', function(done) {
     this.timeout(4000);
-    const promise = addUserToCourse('admin', 3);
+    const promise = addUserToCourse('test_vorona_1', 3);
     assertPromise(done, promise, identity);
   });
 
   it('it should create a user', (done) => {
-    const promise = createUser('admin')
-      .then(() => read('moodleuser', {lrzid: 'admin'}))
+    const promise = createUser('test_vorona_1')
+      .then(() => read('moodleuser', {lrzid: 'test_vorona_1'}))
       .then((result) => {
-        expect(result[0].lrzid).to.equal('admin');
+        expect(result[0].lrzid).to.equal('test_vorona_1');
         expect(result[0].email).to.equal('alendit@gmail.com');
       })
-      .catch(() => runQuery('DELETE FROM moodleuser WHERE lrzid=$1', 'admin'))
+      .catch(() => runQuery('DELETE FROM moodleuser WHERE lrzid=$1', 'test_vorona_1'))
       .then(() => undefined);
     assertPromise(done, promise, identity);
   });

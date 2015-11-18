@@ -1,4 +1,4 @@
-import { create, read, runQuery, connectUserToCourse } from '../src/server/db/db_actions';
+import { create, read, update, runQuery } from '../src/server/db/db_actions';
 import { expect } from 'chai';
 import { assertPromise } from './test_utils';
 import { identity } from 'lodash';
@@ -9,11 +9,10 @@ describe('database utils', () => {
       .then(() =>
         runQuery('SELECT * FROM moodleuser WHERE lrzid=$1', 'test')
       )
-      .then((result) => {
-        expect(result.rows.length).to.equal(1);
-        const row = result.rows[0];
-        expect(row.lrzid).to.equal('test');
-        expect(row.email).to.equal('test@test.com');
+      .then(({rows}) => {
+        expect(rows.length).to.equal(1);
+        expect(rows[0].lrzid).to.equal('test');
+        expect(rows[0].email).to.equal('test@test.com');
       })
       .then(() =>
         runQuery('DELETE FROM moodleuser WHERE lrzid=$1', 'test')
@@ -26,12 +25,26 @@ describe('database utils', () => {
     const promise = create('moodleuser', {lrzid: 'test', email: 'test@test.com'})
       .then(() => create('moodleuser', {lrzid: 'test2', email: 'test2@test.com'}))
       .then(() => read('moodleuser', {lrzid: 'test'}))
-      .then((rows) => {
-        expect(rows.length).to.equal(1);
-        expect(rows[0].lrzid).to.equal('test');
-        expect(rows[0].email).to.equal('test@test.com');
+      .then((result) => {
+        expect(result).to.be.ok;
+        expect(result.lrzid).to.equal('test');
+        expect(result.email).to.equal('test@test.com');
       })
       .then(() => runQuery('DELETE FROM moodleuser WHERE lrzid=$1 or lrzid=$2', 'test', 'test2'))
+      .then(() => undefined);
+    assertPromise(done, promise, identity);
+  });
+
+  it('should update a created object', (done) => {
+    const promise = create('moodleuser', { lrzid: 'test', 'email': 'test@test.com' })
+      .then(() => update('moodleuser', { lrzid: 'test' }, { lrzid: 'test2', 'email': 'test2@test.com' }))
+      .then(() => read('moodleuser', { lrzid: 'test2' }))
+      .then((result) => {
+        expect(result).to.be.ok;
+        expect(result.lrzid).to.equal('test2');
+        expect(result.email).to.equal('test2@test.com');
+      })
+      .then(() => runQuery('DELETE FROM moodleuser WHERE lrzid=$1', 'test2'))
       .then(() => undefined);
     assertPromise(done, promise, identity);
   });

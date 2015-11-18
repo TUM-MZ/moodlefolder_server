@@ -1,7 +1,6 @@
 require('es6-promise').polyfill();
 require('promise.prototype.finally');
 
-import { uploadResource } from '../powerfolder_proxy';
 import pg from 'pg';
 import { keys, values, zip } from 'lodash';
 
@@ -31,12 +30,16 @@ export function runQuery(query, ...params) {
   });
 }
 
-function extractObjectInfoForDB(object) {
+function extractObjectInfoForDB(object, firstindex=0) {
   return {
     columns: keys(object),
-    columnIndexes: keys(object).map((value, index) => '$' + (index + 1)),
+    columnIndexes: keys(object).map((value, index) => '$' + (firstindex + index + 1)),
     columnValues: values(object),
   };
+}
+
+function getSelectionPairs({ columns, columnIndexes }) {
+  return zip(columns, columnIndexes).map(([column, index]) => `${column}=${index}`);
 }
 
 export function create(tablename, object) {
@@ -49,11 +52,21 @@ export function create(tablename, object) {
 
 export function read(tablename, selectorObject) {
   const objectInfo = extractObjectInfoForDB(selectorObject);
-  const selectorPairs = zip(objectInfo.columns, objectInfo.columnIndexes)
-    .map(([column, index]) => `${column}=${index}`);
+  const selectorPairs = getSelectionPairs(objectInfo);
   const querystring = `SELECT * FROM ${tablename} WHERE ${selectorPairs.join(' AND ')}`;
   return runQuery(querystring, ...objectInfo.columnValues)
-    .then((result) => result.rows);
+    .then((result) => result.rows[0]);
+}
+
+export function update(tablename, keyObject, updateObject) {
+  const updateInfo = extractObjectInfoForDB(updateObject);
+  const keyInfo = extractObjectInfoForDB(keyObject, updateInfo.columns.length);
+
+  const updatePairs = getSelectionPairs(updateInfo);
+  const selectPairs = getSelectionPairs(keyInfo);
+  return runQuery(
+    `UPDATE ${tablename} SET ${updatePairs.join(',')} WHERE ${selectPairs.join(' AND ')}`,
+    ...updateInfo.columnValues, ...keyInfo.columnValues);
 }
 
 export function addCourseToDB(courseinfo) {
@@ -88,8 +101,7 @@ export function connectUserToCourse(user, course) {
   return create('user_course', {
     userid: user.id,
     courseid: course.id,
-  })
-    .then(() => console.log('connection created'));
+  });
 }
 
 export function addResource(course, resource) {

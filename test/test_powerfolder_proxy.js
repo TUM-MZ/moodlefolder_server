@@ -1,4 +1,4 @@
-import { login, createFolder, removeFolder, getFolderIdByName, shareFolder, uploadFile } from '../src/server/powerfolder_proxy';
+import { login, createFolder, removeFolder, getFolderIdsByName, shareFolder, uploadFile } from '../src/server/powerfolder_proxy';
 import { cookieJar } from '../src/server/utils';
 import { assertPromise } from './test_utils';
 import { expect } from 'chai';
@@ -22,9 +22,17 @@ describe('powerfolder proxy', () => {
   });
 
   it('should get folder external id by name', (done) => {
-    const getpromise = getFolderIdByName('Alex Biro BA');
-    assertPromise(done, getpromise, (externalid) => {
-      expect(externalid).to.equal('Mld6a2gyZlFMUlVVQzdXeXhkb0pT');
+    const getpromise = getFolderIdsByName('perm');
+    assertPromise(done, getpromise, ({ powerfolderexternalid, powerfolderinternalid }) => {
+      expect(powerfolderexternalid).to.equal('Mkw5TWdIdkJQUFpMWWlRY1laNU5q');
+      expect(powerfolderinternalid).to.equal('2L9MgHvBPPZLYiQcYZ5Nj');
+    });
+  });
+
+  it('should return undefined if folder with a name doesn\'t exist', (done) => {
+    const getpromise = getFolderIdsByName('asdffdas123123');
+    assertPromise(done, getpromise, (response) => {
+      expect(response).to.be.an('undefined');
     });
   });
 
@@ -34,7 +42,8 @@ describe('powerfolder proxy', () => {
     assertPromise(done, uploadpromise, (res) => { expect(JSON.parse(res).message).to.equal('File Uploaded') });
   });
 
-  it('should share a course\'s folder to the specified user', (done) => {
+  it('should share a course\'s folder to the specified user', function(done) {
+    this.timeout(4000);
     const course = { powerfolderexternalid: 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q' };
     const user = { lrzid: 'test_vorona_1' };
     const promise = shareFolder(course, user);

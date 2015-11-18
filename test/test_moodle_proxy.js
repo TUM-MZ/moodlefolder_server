@@ -41,9 +41,9 @@ describe('getting resource list from the moodle API', () => {
   })
 
   it('should retrieve user infomation', (done) => {
-    const userinfo = getUserInfo('admin');
+    const userinfo = getUserInfo('test_vorona_1');
     assertPromise(done, userinfo, (info) => {
-      expect(info.lrzid).to.equal('admin');
+      expect(info.lrzid).to.equal('test_vorona_1');
       expect(info.email).to.equal('alendit@gmail.com');
     });
   });

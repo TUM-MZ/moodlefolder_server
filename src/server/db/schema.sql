@@ -15,8 +15,8 @@ create table course (
 );
 
 create table user_course (
-  userid bigserial references moodleuser(id),
-  courseid bigserial references course(id),
+  userid bigserial references moodleuser(id) ON UPDATE CASCADE,
+  courseid bigserial references course(id) ON UPDATE CASCADE,
   created timestamp not null default CURRENT_TIMESTAMP
 );
 
@@ -26,5 +26,5 @@ create table resource (
   title text not null,
   resPath text not null,
   lastmodified timestamp not null,
-  courseid bigserial references course(moodleid)
+  courseid bigserial references course(moodleid) ON UPDATE CASCADE
 );
