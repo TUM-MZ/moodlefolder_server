@@ -99,6 +99,7 @@ export function getUserInfo(lrzid) {
   })
     .then((body) => {
       const userInfo = body.users[0];
+      if (!userInfo) throw Error(`User ${lrzid} not found`)
       return { lrzid: userInfo.username, email: userInfo.email };
     }, console.error);
 }

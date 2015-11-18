@@ -4,7 +4,7 @@ require('promise.prototype.finally');
 import pg from 'pg';
 
 import { listCourses, updateResource, addCourseToDB, readCourse,
-  deleteCourse, readUser, connectUserToCourse, create, read, update } from './db/db_actions';
+  deleteCourse, readUser, connectUserToCourse, create, read, update, runQuery } from './db/db_actions';
 import { getCourseResources, getCourseInfo, downloadFile, getUserInfo } from './moodle_proxy';
 import { createFolder, getFolderIdsByName, login, uploadFile,
   removeFolder, shareFolder } from './powerfolder_proxy';
@@ -113,4 +113,11 @@ export function addUserToCourse(lrzid, courseid) {
           console.log('no action needed');
         })
     );
+}
+
+export function listCoursesForUser(lrzid) {
+  return runQuery(`SELECT c.moodleid, c.shorttitle
+    FROM course as c, moodleuser as m, user_course as uc
+    WHERE c.id = uc.courseid AND m.id = uc.userid AND m.lrzid=$1`, lrzid)
+    .then((result) => result.rows);
 }

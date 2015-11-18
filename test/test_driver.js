@@ -1,4 +1,5 @@
-import { uploadResource, addCourse, clearCourse, updateResources, addUserToCourse, createUser } from '../src/server/driver';
+import { uploadResource, addCourse, clearCourse, updateResources,
+          addUserToCourse, createUser, listCoursesForUser} from '../src/server/driver';
 import { assertPromise } from './test_utils';
 import { readCourse, read, runQuery } from '../src/server/db/db_actions';
 import { identity } from 'lodash';
@@ -35,7 +36,7 @@ describe('main driver', () => {
       .then(() => readCourse(moodleid))
       .then((responseCourseinfo) => {
         courseinfo = responseCourseinfo;
-        //return clearCourse(moodleid);
+        return clearCourse(moodleid);
       })
       .then(() => courseinfo);
     assertPromise(done, addpromise, (course) => {
@@ -66,6 +67,23 @@ describe('main driver', () => {
         expect(result[0].email).to.equal('alendit@gmail.com');
       })
       .catch(() => runQuery('DELETE FROM moodleuser WHERE lrzid=$1', 'test_vorona_1'))
+      .then(() => undefined);
+    assertPromise(done, promise, identity);
+  });
+
+  it('it should return list of courses for a given user', function(done) {
+    this.timeout(20000);
+    const promise = addUserToCourse('test_vorona_1', 2)
+      .then(() => addUserToCourse('test_vorona_1', 3))
+      .then(() => listCoursesForUser('test_vorona_1'))
+      .then((courses) => {
+        expect(courses.length).to.equal(2);
+        console.log(courses);
+        const course = courses[0].moodleid == 3 ? courses[0] : courses[1];
+        expect(course.shorttitle).to.equal('child2');
+      })
+      .then(() => clearCourse(2))
+      .then(() => clearCourse(3))
       .then(() => undefined);
     assertPromise(done, promise, identity);
   });
