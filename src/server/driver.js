@@ -7,7 +7,7 @@ import { listCourses, updateResource, addCourseToDB, readCourse,
   deleteCourse, readUser, connectUserToCourse, create, read, update, runQuery } from './db/db_actions';
 import { getCourseResources, getCourseInfo, downloadFile, getUserInfo } from './moodle_proxy';
 import { createFolder, getFolderIdsByName, login, uploadFile,
-  removeFolder, shareFolder } from './powerfolder_proxy';
+  removeFolder, shareFolder, unshareFolder } from './powerfolder_proxy';
 import { partial } from 'lodash';
 import path from 'path';
 import fs from 'fs';
@@ -83,6 +83,13 @@ export function addCourse(courseid) {
           }
         });
     });
+}
+
+export function removeUserFromCourse(lrzid, courseid) {
+  return readCourse(courseid)
+    .then((course) => {
+      return unshareFolder(course, { lrzid: lrzid });
+    })
 }
 
 export function clearCourse(courseid) {

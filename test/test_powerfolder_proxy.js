@@ -1,8 +1,9 @@
-import { login, createFolder, removeFolder, getFolderIdsByName, shareFolder, uploadFile } from '../src/server/powerfolder_proxy';
-import { cookieJar } from '../src/server/utils';
+import { login, createFolder, removeFolder, getFolderIdsByName, shareFolder,
+  uploadFile, unshareFolder, getFolderMembers } from '../src/server/powerfolder_proxy';
+import { cookieJar, request } from '../src/server/utils';
 import { assertPromise } from './test_utils';
 import { expect } from 'chai';
-import { identity } from 'lodash';
+import { identity, pluck } from 'lodash';
 import path from 'path';
 
 describe('powerfolder proxy', () => {
@@ -49,4 +50,17 @@ describe('powerfolder proxy', () => {
     const promise = shareFolder(course, user);
     assertPromise(done, promise, identity);
   });
+
+  it('should share and then unshare course to a user', function(done) {
+    this.timeout(4000);
+    const course = { powerfolderexternalid: 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q' };
+    const user = { lrzid: 'test_vorona_1' };
+    const promise = shareFolder(course, user)
+      .then(() => unshareFolder(course, user))
+      .then(() => getFolderMembers(course))
+      .then((members) => {
+        expect(pluck(members, 'username')).to.not.contain('test_vorona_1');
+      });
+    assertPromise(done, promise, identity);
+  })
 });

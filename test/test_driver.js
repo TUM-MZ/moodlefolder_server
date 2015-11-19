@@ -1,8 +1,9 @@
 import { uploadResource, addCourse, clearCourse, updateResources,
-          addUserToCourse, createUser, listCoursesForUser} from '../src/server/driver';
+          addUserToCourse, createUser, listCoursesForUser, removeUserFromCourse} from '../src/server/driver';
+import { getFolderMembers } from '../src/server/powerfolder_proxy';
 import { assertPromise } from './test_utils';
 import { readCourse, read, runQuery } from '../src/server/db/db_actions';
-import { identity } from 'lodash';
+import { identity, pluck } from 'lodash';
 import { expect } from 'chai';
 
 describe('main driver', () => {
@@ -56,6 +57,18 @@ describe('main driver', () => {
   it('should add a user to a course', function(done) {
     this.timeout(4000);
     const promise = addUserToCourse('test_vorona_1', 3);
+    assertPromise(done, promise, identity);
+  });
+
+  it('it should unshare folder from a user', function(done) {
+    this.timeout(8000);
+    const promise = addUserToCourse('test_vorona_1', 3)
+      .then(() => removeUserFromCourse('test_vorona_1', 3))
+      .then(() => readCourse(3))
+      .then((course) => getFolderMembers(course))
+      .then((response) => {
+        expect(pluck(response, 'username')).to.not.contain('test_vorona_1');
+      });
     assertPromise(done, promise, identity);
   });
 
