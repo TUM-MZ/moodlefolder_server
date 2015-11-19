@@ -62,13 +62,20 @@ describe('main driver', () => {
 
   it('it should unshare folder from a user', function(done) {
     this.timeout(8000);
+    let course;
     const promise = addUserToCourse('test_vorona_1', 3)
       .then(() => removeUserFromCourse('test_vorona_1', 3))
       .then(() => readCourse(3))
-      .then((course) => getFolderMembers(course))
+      .then((courseinfo) => { course = courseinfo ;})
+      .then(() => getFolderMembers(course)
       .then((response) => {
         expect(pluck(response, 'username')).to.not.contain('test_vorona_1');
-      });
+        return read('moodleuser', { lrzid: 'test_vorona_1' });
+      })
+      .then((userinfo) => read('user_course', { courseid: course.id, userid: userinfo.id }))
+      .then((connectioninfo) => {
+        expect(connectioninfo).to.be.undefined;
+      }))
     assertPromise(done, promise, identity);
   });
 

@@ -1,5 +1,5 @@
 import restify from 'restify';
-import { addUserToCourse, listCoursesForUser, updateResources } from './driver';
+import { addUserToCourse, listCoursesForUser, updateResources, removeUserFromCourse } from './driver';
 import { VERSION } from '../version';
 
 const server = restify.createServer({
@@ -7,7 +7,8 @@ const server = restify.createServer({
   version: VERSION,
 });
 
-server.use(restify.queryParser())
+server.use(restify.queryParser());
+server.use(restify.bodyParser());
 
 server.get('test', (req, res, next) => {
   res.send('Hello, world!');
@@ -21,7 +22,7 @@ function handleError(response, next) {
   };
 }
 
-server.get('addUserToCourse/', (request, response, next) => {
+server.post('addUserToCourse/', (request, response, next) => {
   const { courseid, userid } = request.params;
   addUserToCourse(userid, courseid)
     .then(() => {
@@ -30,14 +31,14 @@ server.get('addUserToCourse/', (request, response, next) => {
     }, handleError(response, next));
 });
 
-server.get('removeUsersFromCourse/', (request, response, next) => {
+server.post('removeUserFromCourse/', (request, response, next) => {
   const { courseid, userid } = request.params;
   removeUserFromCourse(userid, courseid)
     .then(() => {
       response.send({'message': `Removed user ${userid} from course ${courseid}`});
       next();
     }, handleError(response, next));
-})
+});
 
 server.get('listCourseForUser/', (request, response, next) => {
   const { userid } = request.params;

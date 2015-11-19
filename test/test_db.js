@@ -1,4 +1,4 @@
-import { create, read, update, runQuery } from '../src/server/db/db_actions';
+import { create, read, update, deleteRecord, runQuery } from '../src/server/db/db_actions';
 import { expect } from 'chai';
 import { assertPromise } from './test_utils';
 import { identity } from 'lodash';
@@ -48,4 +48,14 @@ describe('database utils', () => {
       .then(() => undefined);
     assertPromise(done, promise, identity);
   });
+
+  it('should create and delete record', (done) => {
+    const promise = create('moodleuser', { lrzid: 'aksdfjaldsjf', 'email': 'adsf@adsfa.com' })
+      .then(() => deleteRecord('moodleuser', { lrzid: 'aksdfjaldsjf'}))
+      .then(() => read('moodleuser', { lrzid: 'aksdfjaldsjf' }))
+      .then((result) => {
+        expect(result).to.be.undefined;
+      });
+    assertPromise(done, promise, identity);
+    })
 });

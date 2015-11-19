@@ -4,7 +4,7 @@ require('promise.prototype.finally');
 import pg from 'pg';
 
 import { listCourses, updateResource, addCourseToDB, readCourse,
-  deleteCourse, readUser, connectUserToCourse, create, read, update, runQuery } from './db/db_actions';
+  deleteCourse, readUser, connectUserToCourse, create, read, update, deleteRecord, runQuery } from './db/db_actions';
 import { getCourseResources, getCourseInfo, downloadFile, getUserInfo } from './moodle_proxy';
 import { createFolder, getFolderIdsByName, login, uploadFile,
   removeFolder, shareFolder, unshareFolder } from './powerfolder_proxy';
@@ -86,10 +86,11 @@ export function addCourse(courseid) {
 }
 
 export function removeUserFromCourse(lrzid, courseid) {
-  return readCourse(courseid)
-    .then((course) => {
-      return unshareFolder(course, { lrzid: lrzid });
-    })
+  return Promise.all([readCourse(courseid), read('moodleuser', { lrzid })])
+    .then(([course, user]) => {
+      return unshareFolder(course, user)
+        .then(() => deleteRecord('user_course', { courseid: course.id, userid: user.id }))
+    });
 }
 
 export function clearCourse(courseid) {
@@ -117,7 +118,6 @@ export function addUserToCourse(lrzid, courseid) {
             return connectUserToCourse(userinfo, courseinfo)
               .then(() => shareFolder(courseinfo, userinfo));
           }
-          console.log('no action needed');
         })
     );
 }

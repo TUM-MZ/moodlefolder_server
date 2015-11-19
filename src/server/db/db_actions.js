@@ -69,6 +69,13 @@ export function update(tablename, keyObject, updateObject) {
     ...updateInfo.columnValues, ...keyInfo.columnValues);
 }
 
+export function deleteRecord(tablename, selector) {
+  const objectInfo = extractObjectInfoForDB(selector);
+  const selectorPairs = getSelectionPairs(objectInfo);
+  const queryString = `DELETE FROM ${tablename} WHERE ${selectorPairs.join(' AND ')}`;
+  return runQuery(queryString, ...objectInfo.columnValues);
+}
+
 export function addCourseToDB(courseinfo) {
   return runQuery(`INSERT INTO course (moodleid, url, longtitle, shorttitle, powerfolderinternalid, powerfolderexternalid)
          VALUES ($1, $2, $3, $4, $5, $6)`,
