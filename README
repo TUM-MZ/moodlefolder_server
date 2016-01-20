@@ -2,3 +2,11 @@ MoodleFolder
 ==============
 
 Moodle Integration with LRZ's SyncAndShare service.
+
+Installation
+=============
+
+1. Generate a new service in moodle which contains
+the functions core_user_get_users and core_user_get_users_by_field.
+2. Generate a token for this service and save it under src/server/tokens.js variable WS_USER_TOKEN.
+3. Generate a token for moodle mobile web services and save it under src/server/tokens.js variable WS_TOKEN.

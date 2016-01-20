@@ -40,7 +40,7 @@ server.post('removeUserFromCourse/', (request, response, next) => {
     }, handleError(response, next));
 });
 
-server.get('listCourseForUser/', (request, response, next) => {
+server.get('listCoursesForUser/', (request, response, next) => {
   const { userid } = request.params;
   listCoursesForUser(userid)
     .then((courses) => {

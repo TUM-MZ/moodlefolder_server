@@ -4,7 +4,8 @@
   "description": "Connector backend for moodle and powerfolder",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --harmony .",
+    "start": "node --harmony .",
+    "start-dev": "nodemon --harmony .",
     "test": "node_modules/.bin/mocha --compilers js:babel/register --require='./test/test_helper' 'test/**/*.@(js|jsx)'",
     "test:watch": "nodemon node_modules/.bin/mocha --compilers js:babel/register --require='./test/test_helper' 'test/**/*.@\\(js\\|jsx\\)'  -e js,jsx,html -V"
   },

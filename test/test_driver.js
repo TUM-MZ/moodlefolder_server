@@ -32,7 +32,7 @@ describe('main driver', () => {
   it('should create a new course by moodle id and remove it', function(done) {
     const moodleid = 3;
     let courseinfo;
-    this.timeout(4000);
+    this.timeout(8000);
     const addpromise = addCourse(moodleid)
       .then(() => readCourse(moodleid))
       .then((responseCourseinfo) => {

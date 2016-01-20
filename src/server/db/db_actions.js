@@ -4,7 +4,10 @@ require('promise.prototype.finally');
 import pg from 'pg';
 import { keys, values, zip } from 'lodash';
 
-const connString = 'postgres://postgres@localhost/moodlefolder';
+const pghostname = process.env.PG_PORT_5432_TCP_ADDR || 'localhost';
+const pgport = process.env.PG_PORT_5432_TCP_PORT || 5432;
+const connString = process.env.DATABASE_URL ||
+                    `postgres://postgres@${pghostname}:${pgport}/moodlefolder`;
 
 export function runQuery(query, ...params) {
   return new Promise((fulfill, reject) => {
