@@ -1,2 +1,2 @@
 FROM node:onbuild
-ADD /tmp/tokens.js src/server/
+ADD ../tokens.js src/server/
