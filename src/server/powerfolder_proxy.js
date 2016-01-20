@@ -9,6 +9,17 @@ require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
 
+let pflogin, pfpassword;
+
+try {
+  const pfauth = require('../../pfauth');
+  pflogin = pfauth.pflogin;
+  pfpassword = pfauth.pfpassword;
+} catch (e) {
+  pflogin = process.env.PFLOGIN;
+  pfpassword = process.env.PFPASSWORD;
+}
+
 export function login() {
   return request({
     method: 'get',
