@@ -1,6 +1,5 @@
 import { downloadFile } from './moodle_proxy';
 import path from 'path';
-import {pflogin, pfpassword} from '../../pfauth';
 import fs from 'fs';
 import mime from 'mime';
 import { filter } from 'lodash';
