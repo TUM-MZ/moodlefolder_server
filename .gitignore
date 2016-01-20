@@ -32,4 +32,4 @@ node_modules
 /.idea
 
 /moodle
-git pustokens.js
+secret_tokens.js

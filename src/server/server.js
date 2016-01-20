@@ -1,6 +1,10 @@
 import restify from 'restify';
 import { addUserToCourse, listCoursesForUser, updateResources, removeUserFromCourse } from './driver';
 import { VERSION } from '../version';
+import { WS_USER_TOKEN, WS_TOKEN } from './tokens';
+
+console.log('WS_USER_TOKEN', WS_USER_TOKEN);
+console.log('WS_TOKEN', WS_TOKEN);
 
 const server = restify.createServer({
   name: 'moodleFolderServer',
