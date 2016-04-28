@@ -54,7 +54,8 @@ export function getCourseResources(course) {
       if (section.modules) {
         section.modules.forEach((module) => {
           if (module.modname === 'resource') {
-            module.contents.forEach((file) => resources.push(file));
+            module.contents.filter(file => (file.visible === 1))
+              forEach((file) => resources.push(file));
           }
         });
       }
