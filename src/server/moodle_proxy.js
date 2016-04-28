@@ -51,11 +51,10 @@ export function getCourseResources(course) {
     const resources = [];
     const response = JSON.parse(res);
     response.forEach((section) => {
-      if (section.modules) {
+      if (section.visible === 1 && section.modules) {
         section.modules.forEach((module) => {
-          if (module.modname === 'resource') {
-            module.contents.filter(file => (file.visible === 1))
-              forEach((file) => resources.push(file));
+          if (module.modname === 'resource' && module.visible === 1) {
+            module.contents.forEach((file) => resources.push(file));
           }
         });
       }
