@@ -36,7 +36,8 @@ server.post('addUserToCourse/', (request, response, next) => {
     .then(() => {
       response.send({'message': `Added user ${userid} to course ${courseid}`});
       next();
-    }, handleError(response, next));
+    }, handleError(response, next))
+    .then(() => updateResources());
 });
 
 server.post('removeUserFromCourse/', (request, response, next) => {
@@ -45,7 +46,8 @@ server.post('removeUserFromCourse/', (request, response, next) => {
     .then(() => {
       response.send({'message': `Removed user ${userid} from course ${courseid}`});
       next();
-    }, handleError(response, next));
+    }, handleError(response, next))
+    .then(() => updateResources());
 });
 
 server.get('listCoursesForUser/', (request, response, next) => {
