@@ -98,6 +98,7 @@ export function getUserInfo(lrzid) {
     json: true,
   })
     .then((body) => {
+      if (!body.users) throw Error(`Body ${body} does not contain users`);
       const userInfo = body.users[0];
       if (!userInfo) throw Error(`User ${lrzid} not found`)
       return { lrzid: userInfo.username, email: userInfo.email };

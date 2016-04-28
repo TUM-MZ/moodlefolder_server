@@ -21,7 +21,11 @@ server.get('test', (req, res, next) => {
 
 function handleError(response, next) {
   return (error) => {
-    response.send(`An error occured: ${error}`);
+    if (process.env.NODE_ENV === 'production') {
+      response.send('An error occured');
+    } else {
+      response.send(`An error occured: ${error}, in: ${error.stack}`);
+    }
     next();
   };
 }
