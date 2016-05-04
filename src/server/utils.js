@@ -3,7 +3,8 @@ export const cookieJar = pure_request.jar();
 
  export function request(options) {
   return new Promise((fulfill, reject) => {
-    const extOptions = Object.assign(options, {jar: cookieJar});
+    const extOptions = {...options, jar: cookieJar, followRedirect: true};
+    console.log('options', extOptions);
     pure_request(extOptions, (error, response, body) => {
       if (!error && response.statusCode === 200) {
         fulfill(body);

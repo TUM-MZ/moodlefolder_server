@@ -65,7 +65,8 @@ export function addCourse(courseid) {
         return folderinfo;
       } else {
         return createFolder(courseinfo.shorttitle)
-          .then(() => getFolderIdsByName(courseinfo.shorttitle));
+          .then(() => getFolderIdsByName(courseinfo.shorttitle),
+            () => console.error(`Couldnot create folder ${courseinfo.shorttitle}`));
       }
     }, () => console.error(`Can\'t retrieve infomation for courseid ${courseid}.`))
     .then(({ powerfolderexternalid, powerfolderinternalid }) => ({

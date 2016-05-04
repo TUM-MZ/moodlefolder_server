@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import mime from 'mime';
 import { filter } from 'lodash';
-import { request } from './utils';
+import { request, cookieJar } from './utils';
 require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
@@ -21,28 +21,22 @@ try {
 
 export function login() {
   return request({
-    method: 'get',
-    url: PF_URL + 'login',
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'
-    },
-  })
-    .then(() => {
-      return request({
         method: 'post',
         url: PF_URL + 'login',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0'
+          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.94 Safari/537.36'
         },
         form: {
           Username: pflogin,
           Password: pfpassword,
-          autoLogin: 'true',
           Login: 'Login',
           originalURI: '',
-          CSRFToken: '',
+          CSRFToken: null,
         },
-      });
+      })
+    .then((body) => console.log(body), (err) => {
+      console.error('error2', err);
+      console.error(cookieJar);
     });
 }
 

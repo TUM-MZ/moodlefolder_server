@@ -1,8 +1,6 @@
 {
-  "optional": [
-    "es7.classProperties",
-    "es7.exportExtensions",
-    "es7.functionBind",
-    "es7.objectRestSpread"
+  "presets": ["es2015", "stage-1"],
+  "plugins": [
+    "add-module-exports"
   ]
 }
