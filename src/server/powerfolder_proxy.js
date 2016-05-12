@@ -20,6 +20,7 @@ try {
 }
 
 export function login() {
+    let count = 0;
     return CSRFRequest({
       method: 'post',
       url: PF_URL + 'login',
@@ -29,7 +30,13 @@ export function login() {
         Login: 'Login',
         originalURI: '',
       },
-    })
+    }).then(result => result, (error) => {
+      if (++count > 3) {
+        throw Error(error);
+      } else {
+        login();
+      }
+    });
 }
 
 export function createFolder(folderName) {
