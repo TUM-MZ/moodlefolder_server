@@ -31,7 +31,11 @@ function handleError(response, next) {
 }
 
 server.post('addUserToCourse/', (request, response, next) => {
+
   const { courseid, userid } = request.params;
+  if (courseid === 1) {
+    response.send({'error': 'Can add users to the root course (id = 1)'});
+  }
   addUserToCourse(userid, courseid)
     .then(() => {
       response.send({'message': `Added user ${userid} to course ${courseid}`});
