@@ -3,12 +3,16 @@ require('promise.prototype.finally');
 
 import pg from 'pg';
 
-import { listCourses, updateResource, addCourseToDB, readCourse,
-  deleteCourse, readUser, connectUserToCourse, create, read, update, deleteRecord, runQuery } from './db/db_actions';
-import { getCourseResources, getCourseInfo, downloadFile, getUserInfo } from './moodle_proxy';
-import { createFolder, getFolderIdsByName, login, uploadFile,
-  removeFolder, shareFolder, unshareFolder } from './powerfolder_proxy';
-import { partial } from 'lodash';
+import {
+  listCourses, updateResource, addCourseToDB, readCourse,
+  deleteCourse, readUser, connectUserToCourse, create, read, update, deleteRecord, runQuery
+} from './db/db_actions';
+import {getCourseResources, getCourseInfo, downloadFile, getUserInfo} from './moodle_proxy';
+import {
+  createFolder, getFolderIdsByName, login, uploadFile,
+  removeFolder, shareFolder, unshareFolder
+} from './powerfolder_proxy';
+import {partial} from 'lodash';
 import path from 'path';
 import fs from 'fs';
 
@@ -27,8 +31,8 @@ export function uploadResource(course, resource) {
   const tempPath = path.join('/tmp/', resource.filename);
   return downloadFile(resource, tempPath)
     .then(() =>
-      uploadFile(tempPath, course.powerfolderexternalid, course.powerfolderinternalid, resource.filename)
-    , console.error)
+        uploadFile(tempPath, course.powerfolderexternalid, course.powerfolderinternalid, resource.filename)
+      , console.error)
     .then(() => (fs.unlinkSync(tempPath)));
 }
 
@@ -41,10 +45,10 @@ export function updateResources() {
           return pmap(resources, (resource) => {
             return updateResource(course, resource);
           })
-          .then((resourcesToUpdate) => {
-            return pmap(resourcesToUpdate, partial(uploadResource, course));
-          })
-          .then((uploaded) => (console.log('uploaded', uploaded)), console.error);
+            .then((resourcesToUpdate) => {
+              return pmap(resourcesToUpdate, partial(uploadResource, course));
+            })
+            .then((uploaded) => (console.log('uploaded', uploaded)), console.error);
         });
       });
     }, (error) => (console.error('Error encountered: ', error)))
@@ -69,28 +73,29 @@ export function addCourse(courseid) {
             () => console.error(`Couldnot create folder ${courseinfo.shorttitle}`));
       }
     }, () => console.error(`Can\'t retrieve infomation for courseid ${courseid}.`))
-    .then(({ powerfolderexternalid, powerfolderinternalid }) => ({
-      powerfolderexternalid,
-      powerfolderinternalid,
-      ...courseinfo}),
-          () => (console.error(`Folder for course ${courseinfo.shorttitle} already exists`)))
+    .then(({powerfolderexternalid, powerfolderinternalid}) => ({
+        powerfolderexternalid,
+        powerfolderinternalid,
+        ...courseinfo
+      }),
+      () => (console.error(`Folder for course ${courseinfo.shorttitle} already exists`)))
     .then((fullcourseinfo) => {
-      return read('course', { moodleid: fullcourseinfo.moodleid })
+      return read('course', {moodleid: fullcourseinfo.moodleid})
         .then((course) => {
           if (!course) {
             return addCourseToDB(fullcourseinfo);
           } else {
-            return update('course', { moodleid: fullcourseinfo.moodleid }, fullcourseinfo);
+            return update('course', {moodleid: fullcourseinfo.moodleid}, fullcourseinfo);
           }
         });
     });
 }
 
 export function removeUserFromCourse(lrzid, courseid) {
-  return Promise.all([readCourse(courseid), read('moodleuser', { lrzid })])
+  return Promise.all([readCourse(courseid), read('moodleuser', {lrzid})])
     .then(([course, user]) => {
       return unshareFolder(course, user)
-        .then(() => deleteRecord('user_course', { courseid: course.id, userid: user.id }))
+        .then(() => deleteRecord('user_course', {courseid: course.id, userid: user.id}))
     });
 }
 
@@ -109,17 +114,12 @@ export function addUserToCourse(lrzid, courseid) {
   return Promise.all([readCourse(courseid), readUser(lrzid)])
     .then(([course, userinfo]) => {
       const coursepromise = course || addCourse(courseid).then(() => readCourse(courseid));
-      const userpromise = userinfo || createUser(lrzid).then(() => read('moodleuser', { lrzid }));
+      const userpromise = userinfo || createUser(lrzid).then(() => read('moodleuser', {lrzid}));
       return Promise.all([coursepromise, userpromise]);
     })
     .then(([courseinfo, userinfo]) =>
-      read('user_course', {userid: userinfo.id, courseid: courseinfo.id})
-        .then((result) => {
-          if (!result) {
-            return connectUserToCourse(userinfo, courseinfo)
-              .then(() => shareFolder(courseinfo, userinfo));
-          }
-        })
+      connectUserToCourse(userinfo, courseinfo)
+        .then(() => shareFolder(courseinfo, userinfo))
     );
 }
 
