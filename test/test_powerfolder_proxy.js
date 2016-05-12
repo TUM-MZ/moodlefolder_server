@@ -14,10 +14,11 @@ describe('powerfolder proxy', () => {
     });
   });
 
-  it('should create folder and remove', (done) => {
+  it('should create folder and remove', function (done) {
+    this.timeout(8000);
     const createpromise = createFolder('testfolder')
       .then((folderdata) => {
-        return removeFolder(folderdata.ID);
+        return removeFolder(folderdata.folderName, folderdata.ID);
       })
     assertPromise(done, createpromise, () => undefined);
   });
@@ -52,7 +53,7 @@ describe('powerfolder proxy', () => {
   });
 
   it('should share and then unshare course to a user', function(done) {
-    this.timeout(4000);
+    this.timeout(8000);
     const course = { powerfolderexternalid: 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q' };
     const user = { lrzid: 'test_vorona_1' };
     const promise = shareFolder(course, user)

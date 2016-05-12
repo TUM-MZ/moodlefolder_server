@@ -20,24 +20,16 @@ try {
 }
 
 export function login() {
-  return request({
-        method: 'post',
-        url: PF_URL + 'login',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.94 Safari/537.36'
-        },
-        form: {
-          Username: pflogin,
-          Password: pfpassword,
-          Login: 'Login',
-          originalURI: '',
-          CSRFToken: null,
-        },
-      })
-    .then((body) => console.log(body), (err) => {
-      console.error('error2', err);
-      console.error(cookieJar);
-    });
+    return request({
+      method: 'post',
+      url: PF_URL + 'login',
+      form: {
+        Username: pflogin,
+        Password: pfpassword,
+        Login: 'Login',
+        originalURI: '',
+      },
+    })
 }
 
 export function createFolder(folderName) {
@@ -58,7 +50,7 @@ export function createFolder(folderName) {
 /*
  * takes the internal folder ID not the external one
  */
-export function removeFolder(internalfolderid) {
+export function removeFolder(foldername, internalfolderid) {
   return login()
     .then(() =>
       request({
@@ -70,15 +62,14 @@ export function removeFolder(internalfolderid) {
           leave: 'true',
           removePermission: 'true',
           FolderID: internalfolderid,
-          FolderName: 'doesntmatter',
+          FolderName: foldername,
           action: 'leave',
-          CSRFToken: '$CSRFToken',
         },
       })
     );
 }
 
-export function getFolderIdsByName(foldername) {
+export function getFolderIdsByName(foldername) {;
   return login()
     .then(() => {
       return request({
@@ -111,7 +102,6 @@ export function shareFolder(course, user) {
           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
         },
         qs: {
-          CSRFToken: '',
           OID: '',
           permission: 'READ',
           invite: 'true',
@@ -123,7 +113,7 @@ export function shareFolder(course, user) {
     )
     .then((response) => {
       if (!response.message) {
-        throw Error(reponse);
+        throw Error(response);
       }
     });
 }
@@ -140,21 +130,19 @@ export function unshareFolder(course, user) {
           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
         },
         qs: {
-          CSRFToken: '',
-          OID: '',
-          permission: 'READ',
-          invite: 'true',
+          OID: 'doesntmatter',
           username: lrzid,
-          isGroup: '',
         },
+        form: {},
         json: true,
       })
     )
     .then((response) => {
+      console.log('shared', response);
       if (!response.message) {
-        throw Error(reponse);
+        throw Error(response);
       }
-    });
+    }, (err) => {console.log('errunshare', err); throw Error(err)});
 }
 
 export function getFolderMembers(course) {
@@ -169,7 +157,6 @@ export function getFolderMembers(course) {
           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
         },
         qs: {
-          CSRFToken: '',
         },
         json: true,
       })
@@ -193,7 +180,6 @@ export function uploadFile(targetPath, externalFolderID, internalFolderID, filen
         path: '',
         ajax: 1,
         // action: 'rename',
-        CSRFToken: '',
         file: {
           value: fs.createReadStream(targetPath),
           options: {

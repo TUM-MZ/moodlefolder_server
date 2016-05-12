@@ -96,7 +96,7 @@ export function removeUserFromCourse(lrzid, courseid) {
 
 export function clearCourse(courseid) {
   return readCourse(courseid)
-    .then((courseinfo) => removeFolder(courseinfo.powerfolderinternalid))
+    .then((courseinfo) => removeFolder(courseinfo.shorttitle, courseinfo.powerfolderinternalid))
     .then(() => deleteCourse(courseid));
 }
 
