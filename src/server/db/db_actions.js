@@ -53,10 +53,6 @@ export function create(tablename, object) {
     .then((result) => result.rows);
 }
 
-/*
-  tablename: string
-  selectorObject: { columnName: value }
- */
 export function read(tablename, selectorObject) {
   const objectInfo = extractObjectInfoForDB(selectorObject);
   const selectorPairs = getSelectionPairs(objectInfo);
@@ -112,11 +108,10 @@ export function readUser(lrzid) {
 }
 
 export function connectUserToCourse(user, course) {
-  return read('user_course', {userid: user.id, courseid: course.id})
-    .then(result => result.rows.length > 0 ? null : create('user_course', {
+  return create('user_course', {
     userid: user.id,
     courseid: course.id,
-  }));
+  });
 }
 
 export function addResource(course, resource) {
