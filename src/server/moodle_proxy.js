@@ -50,6 +50,7 @@ export function getCourseResources(course) {
   return courseContent.then((res) => {
     const resources = [];
     const response = JSON.parse(res);
+    console.log(response);
     response.forEach((section) => {
       if (section.visible === 1 && section.modules) {
         section.modules.forEach((module) => {

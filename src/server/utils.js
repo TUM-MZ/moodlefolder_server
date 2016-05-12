@@ -2,21 +2,27 @@ import pure_request from 'request';
 export const cookieJar = pure_request.jar();
 let CSRFToken = '';
 
- export function request(options) {
-  return new Promise((fulfill, reject) => {
+export function CSRFRequest(options) {
     const { form, qs, ...restOptions } = options;
-
-    const extOptions = {
-      ...restOptions,
-      jar: cookieJar,
-      followAllRedirects: true,
-    };
+    const extOptions = { ...restOptions };
     if (!!form) {
       extOptions.form = { ...form, CSRFToken }
     }
     if (!!qs) {
       extOptions.qs = { ...qs, CSRFToken }
     }
+    return request(extOptions);
+}
+
+ export function request(options) {
+  return new Promise((fulfill, reject) => {
+
+    const extOptions = {
+      ...options,
+      jar: cookieJar,
+      followAllRedirects: true,
+    };
+    
     pure_request(extOptions, (error, response, body) => {
       const tokenMatch = /var csrf_token = \'(.*)\'/g.exec(body);
       if (!!tokenMatch) {

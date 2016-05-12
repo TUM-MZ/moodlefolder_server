@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import mime from 'mime';
 import { filter } from 'lodash';
-import { request, cookieJar } from './utils';
+import { CSRFRequest, cookieJar } from './utils';
 require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
@@ -20,7 +20,7 @@ try {
 }
 
 export function login() {
-    return request({
+    return CSRFRequest({
       method: 'post',
       url: PF_URL + 'login',
       form: {
@@ -33,7 +33,7 @@ export function login() {
 }
 
 export function createFolder(folderName) {
-  return request({
+  return CSRFRequest({
     method: 'GET',
     url: PF_URL + 'api/folders',
     qs: {
@@ -53,7 +53,7 @@ export function createFolder(folderName) {
 export function removeFolder(foldername, internalfolderid) {
   return login()
     .then(() =>
-      request({
+      CSRFRequest({
         url: PF_URL + 'leavefolder',
         headers: {
           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
@@ -72,7 +72,7 @@ export function removeFolder(foldername, internalfolderid) {
 export function getFolderIdsByName(foldername) {;
   return login()
     .then(() => {
-      return request({
+      return CSRFRequest({
         method: 'get',
         url: PF_URL + 'foldersjson',
         headers: {
@@ -95,7 +95,7 @@ export function shareFolder(course, user) {
   const lrzid = user.lrzid;
   return login()
     .then(() =>
-      request({
+      CSRFRequest({
         method: 'post',
         url: PF_URL + 'members/' + externalid,
         headers: {
@@ -123,7 +123,7 @@ export function unshareFolder(course, user) {
   const lrzid = user.lrzid;
   return login()
     .then(() =>
-      request({
+      CSRFRequest({
         method: 'DELETE',
         url: PF_URL + 'members/' + externalid,
         headers: {
@@ -150,7 +150,7 @@ export function getFolderMembers(course) {
 
   return login()
     .then(() =>
-      request({
+      CSRFRequest({
         method: 'GET',
         url: PF_URL + 'membersjson/' + externalid,
         headers: {
@@ -168,12 +168,12 @@ export function getFolderMembers(course) {
 
 export function uploadFile(targetPath, externalFolderID, internalFolderID, filename) {
   return login()
-    .then(() => request({
+    .then(() => CSRFRequest({
       method: 'post',
       url: PF_URL + 'upload/' + externalFolderID,
       headers: {
         'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
-        'X-Requested-With': 'XMLHttpRequest',
+        'X-Requested-With': 'XMLHttpCSRFRequest',
       },
       formData: {
         folderID: internalFolderID,
