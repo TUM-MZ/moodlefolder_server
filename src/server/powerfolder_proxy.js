@@ -4,7 +4,6 @@ import fs from 'fs';
 import mime from 'mime';
 import { filter } from 'lodash';
 import { CSRFRequest, cookieJar, CSRFToken } from './utils';
-require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
 

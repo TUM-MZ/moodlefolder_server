@@ -1,6 +1,3 @@
-require('es6-promise').polyfill();
-require('promise.prototype.finally');
-
 import pg from 'pg';
 import { keys, values, zip } from 'lodash';
 

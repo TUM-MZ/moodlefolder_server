@@ -1,6 +1,3 @@
-require('es6-promise');
-require('promise.prototype.finally');
-
 import pg from 'pg';
 
 import { listCourses, updateResource, addCourseToDB, readCourse,
@@ -32,25 +29,22 @@ export function uploadResource(course, resource) {
     .then(() => (fs.unlinkSync(tempPath)));
 }
 
-export function updateResources() {
-  return login()
-    .then(listCourses)
-    .then((courses) => {
-      return pmap(courses, (course) => {
-        return getCourseResources(course).then((resources) => {
-          return pmap(resources, (resource) => {
-            return updateResource(course, resource);
-          })
-          .then((resourcesToUpdate) => {
-            return pmap(resourcesToUpdate, partial(uploadResource, course));
-          })
-          .then((uploaded) => (console.log('uploaded', uploaded)), console.error);
-        });
-      });
-    }, (error) => (console.error('Error encountered: ', error)))
-    .finally(() => {
-      pg.end();
-    });
+export async function updateResources() {
+  try {
+    const resp = await login();
+    const coursesList = await listCourses();
+    const courseResp = await Promise.all(coursesList.map(async (course) => {
+      const courseResources = await getCourseResources(course);
+      const resoursesToUpdate = await Promise.all(
+        courseResources.map(async (resource) => updateResource(course, resource)));
+      const uploaded = await Promise.all(resoursesToUpdate.map(partial(uploadResource, course)));
+      return uploaded;
+    }));
+  } catch (err) {
+    throw err;
+  } finally {
+    pg.end();
+  }
 }
 
 export function addCourse(courseid) {
