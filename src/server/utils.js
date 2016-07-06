@@ -1,6 +1,6 @@
 import pure_request from 'request';
 export const cookieJar = pure_request.jar();
-let CSRFToken = '';
+export let CSRFToken = '';
 
 export function CSRFRequest(options) {
     const { form, qs, ...restOptions } = options;
@@ -22,7 +22,7 @@ export function CSRFRequest(options) {
       jar: cookieJar,
       followAllRedirects: true,
     };
-    
+
     pure_request(extOptions, (error, response, body) => {
       const tokenMatch = /var csrf_token = \'(.*)\'/g.exec(body);
       if (!!tokenMatch) {

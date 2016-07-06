@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import mime from 'mime';
 import { filter } from 'lodash';
-import { CSRFRequest, cookieJar } from './utils';
+import { CSRFRequest, cookieJar, CSRFToken } from './utils';
 require('es6-promise').polyfill();
 
 const PF_URL = 'https://syncandshare.lrz.de/';
@@ -19,9 +19,9 @@ try {
   pfpassword = process.env.PFPASSWORD;
 }
 
-export function login() {
-    let count = 0;
-    return CSRFRequest({
+export async function login(attempt = 0) {
+  try {
+    const result = await CSRFRequest({
       method: 'post',
       url: PF_URL + 'login',
       form: {
@@ -30,13 +30,19 @@ export function login() {
         Login: 'Login',
         originalURI: '',
       },
-    }).then(result => result, (error) => {
-      if (++count > 3) {
-        throw Error(error);
-      } else {
-        login();
-      }
     });
+    if (CSRFToken === '') {
+      if (attempt > 3) {
+        throw Error(`Cannot get the CSRFToken after ${attempt} attempts`);
+      } else {
+        return await login(++attempt);
+      }
+    } else {
+      return result;
+    }
+  } catch (err) {
+    throw Error(err);
+  }
 }
 
 export function createFolder(folderName) {

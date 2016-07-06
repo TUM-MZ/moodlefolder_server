@@ -7,7 +7,8 @@ import { identity, pluck } from 'lodash';
 import path from 'path';
 
 describe('powerfolder proxy', () => {
-  it('should get cookie JSESSIONID when it logs in', (done) => {
+  it('should get cookie JSESSIONID when it logs in', function(done) {
+    this.timeout(4000);
     const loginpromise = login();
     assertPromise(done, loginpromise, () => {
       expect(JSON.stringify(cookieJar.getCookies('https://syncandshare.lrz.de/'))).to.contain('JSESSIONID');
