@@ -19,6 +19,7 @@ try {
 }
 
 export async function login(attempt = 0) {
+  if (CSRFToken !== '') return CSRFToken;
   try {
     const result = await CSRFRequest({
       method: 'post',
@@ -127,10 +128,11 @@ export function shareFolder(course, user) {
       if (!response.message) {
         throw Error(response);
       }
+      return response.oid;
     });
 }
 
-export function unshareFolder(course, user) {
+export function unshareFolder(course, user, oid) {
   const externalid = course.powerfolderexternalid;
   const lrzid = user.lrzid;
   return login()
@@ -138,19 +140,14 @@ export function unshareFolder(course, user) {
       CSRFRequest({
         method: 'DELETE',
         url: PF_URL + 'members/' + externalid,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:12.0) Gecko/20100101 Firefox/12.0',
-        },
         qs: {
           OID: 'doesntmatter',
           username: lrzid,
         },
-        form: {},
         json: true,
       })
     )
     .then((response) => {
-      console.log('shared', response);
       if (!response.message) {
         throw Error(response);
       }

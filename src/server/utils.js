@@ -3,15 +3,15 @@ export const cookieJar = pure_request.jar();
 export let CSRFToken = '';
 
 export function CSRFRequest(options) {
-    const { form, qs, ...restOptions } = options;
-    const extOptions = { ...restOptions };
-    if (!!form) {
-      extOptions.form = { ...form, CSRFToken }
-    }
-    if (!!qs) {
-      extOptions.qs = { ...qs, CSRFToken }
-    }
-    return request(extOptions);
+  const { form, qs, ...restOptions } = options;
+  const extOptions = { ...restOptions };
+  if (!!form) {
+    extOptions.form = { ...form, CSRFToken }
+  }
+  if (!!qs) {
+    extOptions.qs = { ...qs, CSRFToken }
+  }
+  return request(extOptions);
 }
 
  export function request(options) {

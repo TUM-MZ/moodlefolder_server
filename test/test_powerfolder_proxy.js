@@ -15,13 +15,13 @@ describe('powerfolder proxy', () => {
     });
   });
 
-  it('should create folder and remove', function (done) {
-    this.timeout(8000);
+  it('should create folder and remove it', function (done) {
+    this.timeout(20000);
     const createpromise = createFolder('testfolder')
       .then((folderdata) => {
         return removeFolder(folderdata.folderName, folderdata.ID);
       })
-    assertPromise(done, createpromise, () => undefined);
+    assertPromise(done, createpromise);
   });
 
   it('should get folder external id by name', (done) => {
@@ -58,9 +58,10 @@ describe('powerfolder proxy', () => {
     const course = { powerfolderexternalid: 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q' };
     const user = { lrzid: 'test_vorona_1' };
     const promise = shareFolder(course, user)
-      .then(() => unshareFolder(course, user))
+      .then((oid) => unshareFolder(course, user, oid))
       .then(() => getFolderMembers(course))
       .then((members) => {
+        debugger;
         expect(pluck(members, 'username')).to.not.contain('test_vorona_1');
       });
     assertPromise(done, promise, identity);
