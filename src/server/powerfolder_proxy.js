@@ -19,7 +19,10 @@ try {
 }
 
 export async function login(attempt = 0) {
-  if (CSRFToken !== '') return CSRFToken;
+  if (CSRFToken !== '') {
+    console.log('already logged in with', CSRFToken);
+    return CSRFToken;
+  }
   try {
     const result = await CSRFRequest({
       method: 'post',
@@ -58,6 +61,28 @@ export function createFolder(folderName) {
       pass: pfpassword,
     },
   }).then((body) => ({folderName, ...JSON.parse(body)}));
+}
+
+export function createSubFolder(externalfolderid, subName) {
+   return login().then(() => CSRFRequest({
+    url: 'https://syncandshare.lrz.de/filesapi/' + externalfolderid,
+    method: 'GET',
+    qs: {
+      action: 'createsubdir',
+      type: 'dir',
+      dirName: subName,
+    }
+  }));
+}
+
+export function removeSubFolder(externalfolderid, subName) {
+  return login().then(() => CSRFRequest({
+    url: 'https://syncandshare.lrz.de/filesapi/' + externalfolderid + '/' + subName,
+    method: 'GET',
+    qs: {
+      action: 'delete',
+    }
+  }));
 }
 
 /*
@@ -175,8 +200,14 @@ export function getFolderMembers(course) {
     })
 }
 
-export function uploadFile(targetPath, externalFolderID, internalFolderID, filename) {
+export function uploadFile(targetPath, externalFolderID, internalFolderID, filename, filepath = '/') {
   return login()
+    .then(() => {
+      if (filepath !== '/') {
+        return createSubFolder(externalFolderID, filepath);
+      }
+      return;
+    })
     .then(() => CSRFRequest({
       method: 'post',
       url: PF_URL + 'upload/' + externalFolderID,
@@ -186,7 +217,7 @@ export function uploadFile(targetPath, externalFolderID, internalFolderID, filen
       },
       formData: {
         folderID: internalFolderID,
-        path: '',
+        path: filepath,
         ajax: 1,
         // action: 'rename',
         file: {

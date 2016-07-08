@@ -24,7 +24,7 @@ export function uploadResource(course, resource) {
   const tempPath = path.join('/tmp/', resource.filename);
   return downloadFile(resource, tempPath)
     .then(() =>
-      uploadFile(tempPath, course.powerfolderexternalid, course.powerfolderinternalid, resource.filename)
+      uploadFile(tempPath, course.powerfolderexternalid, course.powerfolderinternalid, resource.filename, resource.filepath)
     , console.error)
     .then(() => (fs.unlinkSync(tempPath)));
 }

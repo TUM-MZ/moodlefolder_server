@@ -1,5 +1,5 @@
 import { login, createFolder, removeFolder, getFolderIdsByName, shareFolder,
-  uploadFile, unshareFolder, getFolderMembers } from '../src/server/powerfolder_proxy';
+  uploadFile, unshareFolder, getFolderMembers, createSubFolder, removeSubFolder } from '../src/server/powerfolder_proxy';
 import { cookieJar, request } from '../src/server/utils';
 import { assertPromise } from './test_utils';
 import { expect } from 'chai';
@@ -24,6 +24,16 @@ describe('powerfolder proxy', () => {
     assertPromise(done, createpromise);
   });
 
+  it('should create subfolder and remove it', function (done) {
+    this.timeout(20000);
+    const createpromise = createSubFolder('Mkw5TWdIdkJQUFpMWWlRY1laNU5q', 'testfolder')
+      .then(() => {
+      debugger;
+        return removeSubFolder('Mkw5TWdIdkJQUFpMWWlRY1laNU5q', 'testfolder');
+      })
+    assertPromise(done, createpromise);
+  });
+
   it('should get folder external id by name', (done) => {
     const getpromise = getFolderIdsByName('perm');
     assertPromise(done, getpromise, ({ powerfolderexternalid, powerfolderinternalid }) => {
@@ -42,6 +52,13 @@ describe('powerfolder proxy', () => {
   it('should upload specified file', (done) => {
     const uploadpromise = uploadFile(path.join(__dirname, 'test_file.txt'), 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q',
       '2L9MgHvBPPZLYiQcYZ5Nj', 'test_file.txt');
+    assertPromise(done, uploadpromise, (res) => { expect(JSON.parse(res).message).to.equal('File Uploaded') });
+  });
+
+  it('should upload specified file to the specified path', function(done) {
+    this.timeout(4000);
+    const uploadpromise = uploadFile(path.join(__dirname, 'test_file.txt'), 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q',
+      '2L9MgHvBPPZLYiQcYZ5Nj', 'test_file.txt', '/test/test2');
     assertPromise(done, uploadpromise, (res) => { expect(JSON.parse(res).message).to.equal('File Uploaded') });
   });
 

@@ -8,7 +8,7 @@ describe('getting resource list from the moodle API', () => {
 
     const courseinfo = getCourseResources({moodleid: 3});
     assertPromise(done, courseinfo, (resourses) => {
-      expect(resourses).to.have.length(2);
+      expect(resourses).to.have.length(4);
     }, done);
   });
 

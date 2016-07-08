@@ -35,11 +35,12 @@ export function getCourseInfo(courseid) {
     });
 }
 
-export function getCourseResources(course) {
+export async function getCourseResources(course) {
   const courseid = course.moodleid;
   if (!courseid) throw new Error('Course has to have moodleid');
-  const courseContent = request({
+  const courseContent = await request({
     url: MOODLE_REST_API,
+    json: true,
     qs: {
       wstoken: WS_TOKEN,
       wsfunction: 'core_course_get_contents',
@@ -47,21 +48,25 @@ export function getCourseResources(course) {
       courseid: courseid,
     },
   });
-  return courseContent.then((res) => {
-    const resources = [];
-    const response = JSON.parse(res);
-    console.log(response);
-    response.forEach((section) => {
-      if (section.visible === 1 && section.modules) {
-        section.modules.forEach((module) => {
-          if (module.modname === 'resource' && module.visible === 1) {
-            module.contents.forEach((file) => resources.push(file));
+  const resources = [];
+  courseContent.forEach(section => {
+    if (section.visible === 1 && section.modules) {
+      section.modules.forEach(module => {
+        if (module.visible) {
+          if (module.modname === 'resource') {
+            module.contents.forEach(file => resources.push(file));
+          } else if (module.modname === 'folder') {
+            module.contents.forEach(file => {
+              const { filepath, ...rest } = file;
+              resources.push({ ...rest, filepath: `/${module.name}${filepath}`})
+            })
           }
-        });
-      }
-    });
-    return resources;
+        }
+      })
+    }
   });
+  console.log(resources);
+  return resources;
 }
 
 export function downloadFile(resource, targetPath) {
