@@ -36,15 +36,14 @@ export async function updateResources() {
     const coursesList = await listCourses();
     const courseResp = await Promise.all(coursesList.map(async (course) => {
       const courseResources = await getCourseResources(course);
-      console.log(courseResources);
       const resoursesToUpdate = await Promise.all(
         courseResources.map(async (resource) => updateResource(course, resource)));
+      console.log('to update', resoursesToUpdate);
       const uploaded = await Promise.all(resoursesToUpdate.map(partial(uploadResource, course)));
       const resourcesToRemove = await getResourcesToRemove(course, courseResources);
       for (const resource of resourcesToRemove) {
         // get file path without file name
-        const filePath = resource.respath.split('/').slice(0, -1).join('/')
-        const removeReturn = await removeFile(course.powerfolderexternalid, filePath, resource.title);
+        await removeFile(course.powerfolderexternalid, path.dirname(resource.respath), resource.title);
         removeResource(resource.id);
       }
       return uploaded;

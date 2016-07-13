@@ -1,4 +1,5 @@
 import pg from 'pg';
+import path from 'path';
 import { keys, values, zip } from 'lodash';
 
 const pghostname = process.env.PG_PORT_5432_TCP_ADDR || 'localhost';
@@ -133,31 +134,52 @@ export function updateResourceEntry(resource) {
     .then(result => result);
 }
 
-export function updateResource(course, resource) {
-  return runQuery('SELECT id, lastmodified from resource where url=$1', resource.fileurl)
-    .then((result) => {
-      if (result.rows.length === 0) {
-        return addResource(course, resource)
-          .then(() => (resource), console.error);
-      } else {
-        return updateResourceEntry(resource).then(() => {
-          if (result.rows[0].lastmodified < resource.lastmodified) {
-            return resource;
-          }
-        }, console.error);
-      }
-    });
+async function deduplicateFilename(filename, resourcePath, fileurl) {
+  const { rows: [ { rank } ] } = await runQuery(`select rank from (
+     select url, rank() OVER (partition by courseid, respath order by id asc) as rank from resource
+     where respath = $1) as tmp
+     where url = $2`, resourcePath, fileurl);
+
+  if (parseInt(rank) > 1) {
+    const ext = path.extname(filename);
+    const basename = path.basename(filename, ext);
+    return `${basename}_${rank}${ext}`;
+  }
+  return filename;
 }
 
-export function getResourcesToRemove(course, resources) {
-  return runQuery('SELECT id, url, respath, title from resource WHERE courseid = $1', course.moodleid)
-    .then(({rows: knownResources}) => {
-      const removedResources = [];
-      for (const knownResource of knownResources) {
-        if (!resources.find(res => res.fileurl === knownResource.url)) {
-          removedResources.push(knownResource);
-        }
-      }
-      return removedResources;
-    });
+async function updateFilename(resource) {
+  resource.filename = await deduplicateFilename(resource.filename, resource.filepath + resource.filename, resource.fileurl);
+  return resource;
+}
+
+export async function updateResource(course, resource) {
+
+  const { rows: resourceDBEntry } = await runQuery('SELECT id, lastmodified from resource where url=$1', resource.fileurl);
+  if (resourceDBEntry.length === 0) {
+    try {
+      await addResource(course, resource);
+      return await updateFilename(resource);
+    } catch (exc) {
+      console.error(exc);
+    }
+
+  }
+  await updateResourceEntry(resource);
+  if (resourceDBEntry.lastmodified < resource.lastmodified) {
+    return await updateFilename(resource);
+  }
+}
+
+export async function getResourcesToRemove(course, resources) {
+  const { rows: knownResources } = await runQuery(
+    'SELECT id, url, respath, title from resource WHERE courseid = $1', course.moodleid);
+  const removedResources = [];
+  for (const knownResource of knownResources) {
+    if (!resources.find(res => res.fileurl === knownResource.url)) {
+      knownResource.title = await deduplicateFilename(knownResource.title, knownResource.respath, knownResource.url);
+      removedResources.push(knownResource);
+    }
+  }
+  return removedResources;
 }
