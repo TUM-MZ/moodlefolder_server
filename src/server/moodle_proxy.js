@@ -65,7 +65,6 @@ export async function getCourseResources(course) {
       })
     }
   });
-  console.log(resources);
   return resources;
 }
 

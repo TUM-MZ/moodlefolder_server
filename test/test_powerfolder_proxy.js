@@ -5,6 +5,7 @@ import { assertPromise } from './test_utils';
 import { expect } from 'chai';
 import { identity, pluck } from 'lodash';
 import path from 'path';
+import {removeFile} from '../src/server/powerfolder_proxy';
 
 describe('powerfolder proxy', () => {
   it('should get cookie JSESSIONID when it logs in', function(done) {
@@ -60,6 +61,14 @@ describe('powerfolder proxy', () => {
     const uploadpromise = uploadFile(path.join(__dirname, 'test_file.txt'), 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q',
       '2L9MgHvBPPZLYiQcYZ5Nj', 'test_file.txt', '/test/test2');
     assertPromise(done, uploadpromise, (res) => { expect(JSON.parse(res).message).to.equal('File Uploaded') });
+  });
+
+  it('should upload specified file and remove it', function(done) {
+    this.timeout(4000);
+    const uploadpromise = uploadFile(path.join(__dirname, 'test_file.txt'), 'Mkw5TWdIdkJQUFpMWWlRY1laNU5q',
+      '2L9MgHvBPPZLYiQcYZ5Nj', 'test_file.txt', '/test/test2')
+      .then(() => removeFile('Mkw5TWdIdkJQUFpMWWlRY1laNU5q', '/test/test2/', 'test_file.txt'));
+    assertPromise(done, uploadpromise, (res) => { debugger; return res;});
   });
 
   it('should share a course\'s folder to the specified user', function(done) {

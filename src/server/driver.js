@@ -1,10 +1,10 @@
 import pg from 'pg';
 
-import { listCourses, updateResource, addCourseToDB, readCourse,
+import { listCourses, updateResource, addCourseToDB, readCourse, getResourcesToRemove, removeResource,
   deleteCourse, readUser, connectUserToCourse, create, read, update, deleteRecord, runQuery } from './db/db_actions';
 import { getCourseResources, getCourseInfo, downloadFile, getUserInfo } from './moodle_proxy';
 import { createFolder, getFolderIdsByName, login, uploadFile,
-  removeFolder, shareFolder, unshareFolder } from './powerfolder_proxy';
+  removeFolder, shareFolder, unshareFolder, removeFile } from './powerfolder_proxy';
 import { partial } from 'lodash';
 import path from 'path';
 import fs from 'fs';
@@ -17,6 +17,7 @@ function pmap(list, callback) {
 
 /**
  * Download a specified resource into the course folder in PowerFolder
+ * @param {Object} course
  * @param {Object} resource
  */
 export function uploadResource(course, resource) {
@@ -38,6 +39,13 @@ export async function updateResources() {
       const resoursesToUpdate = await Promise.all(
         courseResources.map(async (resource) => updateResource(course, resource)));
       const uploaded = await Promise.all(resoursesToUpdate.map(partial(uploadResource, course)));
+      const resourcesToRemove = await getResourcesToRemove(course, courseResources);
+      for (const resource of resourcesToRemove) {
+        removeResource(resource.id);
+        // get file path without file name
+        const filePath = resource.respath.split('/').slice(0, -1).join('/')
+        const removeReturn = await removeFile(course.powerfolderexternalid, filePath, resource.title);
+      }
       return uploaded;
     }));
   } catch (err) {

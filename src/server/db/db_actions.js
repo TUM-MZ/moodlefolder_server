@@ -118,6 +118,10 @@ export function addResource(course, resource) {
     .then(result => result);
 }
 
+export function removeResource(resourceid) {
+  deleteRecord('resource', { id: resourceid });
+}
+
 export function updateResourceEntry(resource) {
   return runQuery(`UPDATE resource SET
         url=$1,
@@ -142,5 +146,18 @@ export function updateResource(course, resource) {
           }
         }, console.error);
       }
+    });
+}
+
+export function getResourcesToRemove(course, resources) {
+  return runQuery('SELECT id, url, respath, title from resource WHERE courseid = $1', course.moodleid)
+    .then(({rows: knownResources}) => {
+      const removedResources = [];
+      for (const knownResource of knownResources) {
+        if (!resources.find(res => res.fileurl === knownResource.url)) {
+          removedResources.push(knownResource);
+        }
+      }
+      return removedResources;
     });
 }
