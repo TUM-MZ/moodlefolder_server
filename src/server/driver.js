@@ -38,7 +38,6 @@ export async function updateResources() {
       const courseResources = await getCourseResources(course);
       const resoursesToUpdate = await Promise.all(
         courseResources.map(async (resource) => updateResource(course, resource)));
-      console.log('to update', resoursesToUpdate);
       const uploaded = await Promise.all(resoursesToUpdate.map(partial(uploadResource, course)));
       const resourcesToRemove = await getResourcesToRemove(course, courseResources);
       for (const resource of resourcesToRemove) {

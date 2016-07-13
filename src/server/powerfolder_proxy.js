@@ -233,7 +233,6 @@ export function uploadFile(targetPath, externalFolderID, internalFolderID, filen
 
 export function removeFile(externalFolderID, filePath, filename) {
   const normalizedPath = filePath.slice(-1) === '/' ? filePath : filePath + '/';
-  console.log(filePath);
   return login()
     .then(() =>
       CSRFRequest({
