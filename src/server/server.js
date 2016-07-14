@@ -64,6 +64,7 @@ server.get('listCoursesForUser/', (request, response, next) => {
 });
 
 server.get('updateResources/', (request, response, next) => {
+  console.log(`Update initialized on ${new Date()} by ${request.headers['x-forwarded-for'] || request.connection.remoteAddress}.`)
   updateResources()
     .then(() => {
       response.send({'message': 'Resources updated'});
