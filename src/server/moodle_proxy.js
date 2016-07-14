@@ -7,7 +7,7 @@ import { WS_TOKEN, WS_USER_TOKEN } from './tokens.js';
 import path from 'path';
 import fs from 'fs';
 
-const MOODLE_BASE_URL = 'http://localhost/~alendit/moodle/';
+const MOODLE_BASE_URL = process.env.MOODLE_URL || 'http://localhost/~alendit/moodle/';
  //const MOODLE_BASE_URL = 'https://support.moodle.tum.de/';
 const MOODLE_REST_API = `${MOODLE_BASE_URL}webservice/rest/server.php`;
 
